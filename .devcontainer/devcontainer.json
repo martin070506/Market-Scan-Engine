@@ -1,0 +1,35 @@
+{
+  "name": "Python 3.13 Dev Container",
+
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.cwd": "${workspaceFolder}",
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "editor.formatOnSave": true
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "ms-azuretools.vscode-docker",
+        "charliermarsh.ruff",
+        "ms-python.black-formatter",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+
+  "postCreateCommand": "python -m pip install --upgrade pip && pip install -r requirements.txt",
+
+  "forwardPorts": [8000],
+
+  "remoteUser": "vscode"
+}
