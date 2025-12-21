@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
-
+import yfinance as yf
 app = FastAPI()
 
 # ✅ allow your frontend origin
@@ -89,3 +89,4 @@ def IsStock_Cup_Handle(stock):
 def Calculate_Pivots(stock):
     #GETS A STOCK TICKER(string) AND RETURNS PIVOTS AS A DICTIONARY [max/min pivot , date, price] for example [max, "2023-01-01", 150.0]
     pass
+    

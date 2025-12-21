@@ -16,3 +16,4 @@ black
 isort
 mypy
 flake8
+yfinance
