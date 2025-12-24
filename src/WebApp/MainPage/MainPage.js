@@ -1,6 +1,6 @@
 // Reveal-on-scroll using IntersectionObserver
 const revealElements = document.querySelectorAll(".reveal");
-
+const API_BASE = "https://market-scan-engine.onrender.com";
 const observer = new IntersectionObserver(
     (entries) => {
         entries.forEach((entry) => {
@@ -69,7 +69,7 @@ async function uploadFile(file) {
     formData.append("file", file);
 
     try {
-        const response = await fetch("/upload", {
+        const response = await fetch(`${API_BASE}/upload`, {
             method: "POST",
             body: formData
         });
@@ -99,7 +99,7 @@ async function uploadFile(file) {
 
 async function callPythonWithFile(formData) {
     console.log("Got HERE")
-    const response = await fetch("/run_logic", {
+    const response = await fetch(`${API_BASE}/run_logic`, {
         method: "POST",
         body: formData
     });
