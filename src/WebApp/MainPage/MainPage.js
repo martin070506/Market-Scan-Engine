@@ -69,7 +69,7 @@ async function uploadFile(file) {
     formData.append("file", file);
 
     try {
-        const response = await fetch("http://localhost:8000/upload", {
+        const response = await fetch("/upload", {
             method: "POST",
             body: formData
         });
@@ -99,7 +99,7 @@ async function uploadFile(file) {
 
 async function callPythonWithFile(formData) {
     console.log("Got HERE")
-    const response = await fetch("http://localhost:8000/run_logic", {
+    const response = await fetch("/run_logic", {
         method: "POST",
         body: formData
     });

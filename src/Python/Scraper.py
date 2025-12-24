@@ -5,6 +5,8 @@ import pandas as pd
 import yfinance as yf
 app = FastAPI()
 
+
+
 # ✅ allow your frontend origin
 app.add_middleware(
     CORSMiddleware,
@@ -17,6 +19,7 @@ app.add_middleware(
 # ---------- CSV validation ----------
 def check_Correct_Format_CSV(f):
     try:
+        print("hjadjhadhjaghgayhdgahgdhgahdghadghavhgaghdghgadh")
         df = pd.read_csv(f)
     except Exception as e:
         return False, f"Failed to read CSV: {e}"
@@ -62,6 +65,8 @@ async def Run_Entire_Script(file: UploadFile=File(...)):
 def fromCSV_to_listOfStocks(file):
     df = pd.read_csv(file)
     listOfStocks = df.values.tolist()
+   
+    print(listOfStocks)
     return listOfStocks
 
 
@@ -90,3 +95,19 @@ def Calculate_Pivots(stock):
     #GETS A STOCK TICKER(string) AND RETURNS PIVOTS AS A DICTIONARY [max/min pivot , date, price] for example [max, "2023-01-01", 150.0]
     pass
     
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    host=os.getenv("APP_HOST","127.0.0.1")
+    port = int(os.getenv("APP_PORT", "8000"))
+    print("hjadjhadhjaghgayhdgahgdhgahdghadghavhgaghdghgadh")
+    uvicorn.run("Scraper:app", host=host, port=port, reload=True)
