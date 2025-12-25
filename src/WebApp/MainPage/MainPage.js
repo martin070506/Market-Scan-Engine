@@ -105,7 +105,7 @@ async function callPythonWithFile(formData) {
     });
     const data = await response.json().catch(() => ({}));
     localStorage.setItem(("resultId"), JSON.stringify(data.result_id));
-    window.location.href = "../ResultPage/Result.html";
+    window.location.href = `../ResultPage/Result.html?id=${data.result_id}`;
 
 
 }

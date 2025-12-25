@@ -1,9 +1,11 @@
 const resultId = JSON.parse(localStorage.getItem("resultId") || {});
-localStorage.removeItem("resultId");
 console.log("Loaded ID:", resultId)
+const API_BASE = "https://market-scan-engine.onrender.com";
 
 
 async function fetchResults() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const resultId = urlParams.get('id');
     const CupHandleResp = await fetch(`${API_BASE}/results/${resultId}/cup-handle`);
     const CupHandleData = await CupHandleResp.json().catch(() => ({}));
     console.log("Cup & Handle Stocks:", CupHandleData.stocks);
