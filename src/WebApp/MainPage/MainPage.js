@@ -98,13 +98,13 @@ async function uploadFile(file) {
 
 
 async function callPythonWithFile(formData) {
-    console.log("Got HERE")
+    console.log("Calling Python backend with file...");
     const response = await fetch(`${API_BASE}/run_logic`, {
         method: "POST",
         body: formData
     });
     const data = await response.json().catch(() => ({}));
-    localStorage.setItem(("scanResult"), JSON.stringify(data.Cup_Handle));
+    localStorage.setItem(("resultId"), JSON.stringify(data.result_id));
     window.location.href = "../ResultPage/Result.html";
 
 
