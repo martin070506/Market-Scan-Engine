@@ -11,7 +11,7 @@ app = FastAPI()
 # ✅ allow your frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5500","https://market-scan-engine.onrender.com","https://mar-stocks.netlify.app"],
+    allow_origins=["http://localhost:5500", "https://mar-stocks.netlify.app"],
     allow_credentials=False,   # set True only if you use cookies/sessions
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,7 +20,6 @@ app.add_middleware(
 # ---------- CSV validation ----------
 def check_Correct_Format_CSV(f):
     try:
-        print("hjadjhadhjaghgayhdgahgdhgahdghadghavhgaghdghgadh")
         df = pd.read_csv(f)
     except Exception as e:
         return False, f"Failed to read CSV: {e}"
@@ -145,10 +144,3 @@ def Calculate_Pivots(stock):
 
 
 
-if __name__ == "__main__":
-    import uvicorn
-    import os
-    host=os.getenv("APP_HOST","127.0.0.1")
-    port = int(os.getenv("APP_PORT", "8000"))
-    print("hjadjhadhjaghgayhdgahgdhgahdghadghavhgaghdghgadh")
-    uvicorn.run("Scraper:app", host=host, port=port, reload=True)
