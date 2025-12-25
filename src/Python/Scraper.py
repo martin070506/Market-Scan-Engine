@@ -11,7 +11,7 @@ app = FastAPI()
 # ✅ allow your frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5500","https://market-scan-engine.onrender.com","mar-stocks.netlify.app"],
+    allow_origins=["http://localhost:5500","https://market-scan-engine.onrender.com","https://mar-stocks.netlify.app"],
     allow_credentials=False,   # set True only if you use cookies/sessions
     allow_methods=["*"],
     allow_headers=["*"],
