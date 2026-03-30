@@ -5,41 +5,171 @@
     <meta charset="UTF-8">
     <title>Stock Scan Results</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
+        rel="stylesheet">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 40px;
-            background: #0f172a;
-            color: #e5e7eb;
-        }
 
-        h1 {
-            margin-bottom: 20px;
-        }
-
-        #results {
-            white-space: pre-wrap;
-            background: #020617;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #1e293b;
-        }
-    </style>
+    <link rel="stylesheet" href="Result.css">
 </head>
 
 <body>
 
-    <h1>Scan Results</h1>
+    <header>
+        <div class="logo">SS</div>
+        <h1>Stock Scan Results</h1>
+        <div id="global-status" class="loading">
+            <span class="dot"></span>
+            <span id="status-text">Fetching data…</span>
+        </div>
+        <div class="scan-id" id="scan-id-display">—</div>
+    </header>
 
-    <div id="results">
-        Waiting for results...
-    </div>
+    <div class="page">
 
-    <!-- Your existing JS -->
+        <!-- ── PATTERNS ── -->
+        <div class="group-title">Chart Patterns</div>
+        <div class="cards-grid">
+
+            <div class="card theme-cyan" id="card-cup-handle">
+                <div class="card-header">
+                    <div class="card-icon">☕</div>
+                    <div class="card-title">Cup &amp; Handle</div>
+                    <div class="card-badge" id="badge-cup-handle">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-cup-handle">Loading…</div>
+                </div>
+            </div>
+
+            <div class="card theme-green" id="card-double-bottom">
+                <div class="card-header">
+                    <div class="card-icon">⌣</div>
+                    <div class="card-title">Double Bottom</div>
+                    <div class="card-badge" id="badge-double-bottom">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-double-bottom">Loading…</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── CLOSE TO 150 ── -->
+        <div class="group-title">Close to 150-day MA</div>
+        <div class="cards-grid">
+
+            <div class="card theme-orange" id="card-150-slow">
+                <div class="card-header">
+                    <div class="card-icon">📉</div>
+                    <div class="card-title">150 MA — Slow ATR</div>
+                    <div class="card-badge" id="badge-150-slow">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-150-slow">Loading…</div>
+                </div>
+            </div>
+
+            <div class="card theme-orange" id="card-150-3atr">
+                <div class="card-header">
+                    <div class="card-icon">🔥</div>
+                    <div class="card-title">150 MA — 3+ ATR</div>
+                    <div class="card-badge" id="badge-150-3atr">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-150-3atr">Loading…</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── CLOSE TO 200 ── -->
+        <div class="group-title">Close to 200-day MA</div>
+        <div class="cards-grid">
+
+            <div class="card theme-purple" id="card-200-slow">
+                <div class="card-header">
+                    <div class="card-icon">📉</div>
+                    <div class="card-title">200 MA — Slow ATR</div>
+                    <div class="card-badge" id="badge-200-slow">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-200-slow">Loading…</div>
+                </div>
+            </div>
+
+            <div class="card theme-purple" id="card-200-3atr">
+                <div class="card-header">
+                    <div class="card-icon">🔥</div>
+                    <div class="card-title">200 MA — 3+ ATR</div>
+                    <div class="card-badge" id="badge-200-3atr">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-200-3atr">Loading…</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── PIVOT ENTRIES ── -->
+        <div class="group-title">Pivot Entries</div>
+        <div class="cards-grid">
+
+            <div class="card theme-gold" id="card-min-pivots">
+                <div class="card-header">
+                    <div class="card-icon">▽</div>
+                    <div class="card-title">Min Pivots Ready for Entry</div>
+                    <div class="card-badge" id="badge-min-pivots">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-min-pivots">Loading…</div>
+                </div>
+            </div>
+
+            <div class="card theme-gold" id="card-max-pivots">
+                <div class="card-header">
+                    <div class="card-icon">△</div>
+                    <div class="card-title">Max Pivots Ready for Entry</div>
+                    <div class="card-badge" id="badge-max-pivots">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-max-pivots">Loading…</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── 20-DAY BREAKOUT ── -->
+        <div class="group-title">20-day Breakout (2× ATR)</div>
+        <div class="cards-grid">
+
+            <div class="card theme-cyan" id="card-above-20">
+                <div class="card-header">
+                    <div class="card-icon">↑</div>
+                    <div class="card-title">Above 20-day — 2× ATR</div>
+                    <div class="card-badge" id="badge-above-20">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-above-20">Loading…</div>
+                </div>
+            </div>
+
+            <div class="card theme-green" id="card-below-20">
+                <div class="card-header">
+                    <div class="card-icon">↓</div>
+                    <div class="card-title">Below 20-day — 2× ATR</div>
+                    <div class="card-badge" id="badge-below-20">…</div>
+                </div>
+                <div class="card-body">
+                    <div class="state-loading" id="body-below-20">Loading…</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div><!-- /page -->
+
     <script src="Result.js"></script>
-
 
 </body>
 

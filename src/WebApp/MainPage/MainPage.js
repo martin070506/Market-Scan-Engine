@@ -1,6 +1,8 @@
 // Reveal-on-scroll using IntersectionObserver
 const revealElements = document.querySelectorAll(".reveal");
-const API_BASE = "https://market-scan-engine.onrender.com";
+//const API_BASE = window.CONFIG.API_BASE;
+
+const API_BASE = "http://127.0.0.1:8000"; //THIS MAKES IT LOCAL WE WILL MAKE IT PUBLIC AGAIN
 const observer = new IntersectionObserver(
     (entries) => {
         entries.forEach((entry) => {
@@ -108,14 +110,15 @@ async function callPythonWithFile(formData) {
     console.log("About to redirect With ID: ", data.result_id)
     window.location.href = `../ResultPage/Result.html?id=${data.result_id}`;
     console.log("this shouldnt print")
-
-
 }
 
 // Browse button click opens file dialog
 if (browseBtn && fileInput) {
-    browseBtn.addEventListener("click", () => {
+    browseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         fileInput.click();
+
     });
 
     fileInput.addEventListener("change", (e) => {
@@ -123,7 +126,6 @@ if (browseBtn && fileInput) {
         if (file) {
             uploadFile(file);
         }
-        fileInput.value = ""; // reset
     });
 }
 

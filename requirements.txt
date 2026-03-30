@@ -17,3 +17,5 @@ isort
 mypy
 flake8
 yfinance
+cryptography
+lxml
