@@ -396,6 +396,24 @@ header .scan-id {
     flex-shrink: 0;
 }
 
+.copy-stocks-badge {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: rgb(168, 148, 241);
+    border-color: rgb(228, 202, 202);
+    border-width: 2px;
+    font-size: 11px;
+    padding: 3px 8px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    margin-left: 6px;
+
+    transition: border-color .15s, color .15s;
+    flex-shrink: 0;
+}
+
 .card-toggle-btn:hover {
     border-color: var(--accent);
     color: var(--accent);

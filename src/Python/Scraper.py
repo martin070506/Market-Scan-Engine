@@ -82,8 +82,110 @@ class StockInfo:
             print(f"ATR Calculation Error for {ticker_str}: {e}")
             self.atr= 0.0
 
+class CupHandleValidator:
+    MAX_CHASE_PERCENT = 1.05
+    MIN_CUP_DEPTH = 0.20
+    MAX_HANDLE_RETRACEMENT = 0.12
+    MIN_TOTAL_DURATION = 65 
+    MIN_PIVOT_GAP = 20  # Strict 20-day requirement between each of the 3 pivots
 
+    @staticmethod
+    def check_cup_handle(stock, pivots_from_method):
+        all_points = [p for group in pivots_from_method for p in group]
+        all_points.sort(key=lambda x: x[2])
 
+        if len(all_points) < 3:
+            return {"Bool": False}
+
+        for i in range(len(all_points) - 2):
+            p1 = all_points[i]
+            
+            for j in range(i + 1, len(all_points) - 1):
+                p2 = all_points[j]
+                
+                # Verify Gap 1
+                if (p2[2] - p1[2]) < CupHandleValidator.MIN_PIVOT_GAP:
+                    continue
+                
+                for k in range(j + 1, len(all_points)):
+                    p3 = all_points[k]
+                    
+                    # Verify Gap 2
+                    if (p3[2] - p2[2]) < CupHandleValidator.MIN_PIVOT_GAP:
+                        continue
+
+                    # Verify Horizontal Resistance (Same Price Level)
+                    if not CupHandleValidator._is_horizontal_resistance(p1[0], p2[0], p3[0]):
+                        continue
+
+                    # Verify Cup Structure (Depth and Duration)
+                    if not CupHandleValidator._is_valid_structure(stock, p1, p3):
+                        continue
+                    
+                    # Verify Handle Tightness
+                    handle_info = CupHandleValidator._validate_handle(stock, p3)
+                    if not handle_info["valid"]:
+                        continue
+                    
+                    # Determine Trade Status
+                    status = CupHandleValidator._get_trade_status(stock, p3)
+                    if status["is_valid"]:
+                        return {
+                            "Bool": True,
+                            "Status": status["label"],
+                            "Pivots": [p1[1], p2[1], p3[1], status["last_date"]],
+                            "Metrics": {
+                                "CupDepth": CupHandleValidator._calculate_depth(stock, p1[1], p3[1]),
+                                "PivotDistance": status["distance"]
+                            }
+                        }
+        
+        return {"Bool": False}
+
+    @staticmethod
+    def _is_horizontal_resistance(pr1, pr2, pr3):
+        avg = (pr1 + pr2 + pr3) / 3
+        # Tolerance: All points within 1.5% of the average
+        return all(0.985 * avg <= p <= 1.015 * avg for p in [pr1, pr2, pr3])
+
+    @staticmethod
+    def _is_valid_structure(stock, left, right):
+        duration = right[2] - left[2]
+        if duration < CupHandleValidator.MIN_TOTAL_DURATION:
+            return False
+        depth = CupHandleValidator._calculate_depth(stock, left[1], right[1])
+        return 0.18 <= depth <= 0.45 
+
+    @staticmethod
+    def _validate_handle(stock, right_rim):
+        last_date = stock.high_prices_3y.index[-1].strftime('%Y-%m-%d')
+        handle_depth = CupHandleValidator._calculate_depth(stock, right_rim[1], last_date)
+        return {"valid": handle_depth <= CupHandleValidator.MAX_HANDLE_RETRACEMENT}
+
+    @staticmethod
+    def _get_trade_status(stock, right_rim):
+        current_price = stock.high_prices_3y.iloc[-1]
+        rim_price = right_rim[0]
+        ratio = current_price / rim_price
+        last_date = stock.high_prices_3y.index[-1].strftime('%Y-%m-%d')
+        
+        if ratio > 1.10:
+            return {"is_valid": False, "label": "Extended", "distance": ratio}
+        if 1.00 <= ratio <= 1.05:
+            return {"is_valid": True, "label": "Breakout", "distance": ratio, "last_date": last_date}
+        if ratio < 1.00:
+            return {"is_valid": True, "label": "Forming", "distance": ratio, "last_date": last_date}
+        return {"is_valid": False, "distance": ratio}
+
+    @staticmethod
+    def _calculate_depth(stock, start, end):
+        prices = stock.high_prices_3y.loc[start:end]
+        if prices.empty: 
+            return 0
+        return (prices.max() - prices.min()) / prices.max()
+    
+
+    
 # ✅ allow your frontend origin
 app.add_middleware(
     CORSMiddleware,
@@ -707,9 +809,9 @@ def Cup_Handle_Stocks_And_Pivot_Stocks(listOfStocks):
         if(len(GeneralPivotsLow["Ready"])!=0):
             ReadyMinPivotStocks.append({"Stock":stock.ticker,"Data":GeneralPivotsLow["Ready"]})
         
-        flag=CheckCupHandle(stock,C_H_Pivots)
-        if(flag["Bool"]):
-            ReadyCupHandleStocks.append({"Stock":stock.ticker,"Data":flag["Result"]})
+        result = CupHandleValidator.check_cup_handle(stock, C_H_Pivots)
+        if(result["Bool"]):
+            ReadyCupHandleStocks.append({"Stock":stock.ticker,"Data":result["Pivots"]})
     return {"Support": ReadyMinPivotStocks,"Resistance": ReadyMaxPivotStocks, "Cup And Handle":ReadyCupHandleStocks}
 
 
@@ -737,21 +839,61 @@ def DepthBetweenHandlesAndPotential(stock: StockInfo, dateFirst, dateSecond):
 
 
 
-def CheckCupHandle(stock,pivotsNotReadyOfStock):
-    filteredPivots=[]
-    for pivot in pivotsNotReadyOfStock:
-        if len(pivot)==3:
-            filteredPivots.append(pivot)
-    for i in range(len(filteredPivots)-1):
-        dateFirst=filteredPivots[i][0][1]
-        dateSecond=filteredPivots[i][1][1]
-        dateThird=filteredPivots[i][2][1]
-        depthPotentialOfCup=DepthBetweenHandlesAndPotential(stock,dateFirst,dateSecond)
-        depthPotentialOfHandle=DepthBetweenHandlesAndPotential(stock,dateSecond,dateThird)
-        if depthPotentialOfCup!=None and depthPotentialOfHandle!=None and depthPotentialOfCup[0]>=23 and depthPotentialOfHandle[0]>=6:
-            return {"Bool":True,"Result":[dateFirst,dateSecond,dateThird]}
+def CheckCupHandle(stock, pivotsReadyOrNot):
+    """
+    Revised logic: Look for two distinct 'High' areas.
+    Area 1: The Cup Rim (Point A)
+    Area 2: The Handle Rim (Point B)
+)
+    """
+    # Flatten all pivot groups into a single list of high points
+    # Each 'p' is (Price, Date, Index)
+    all_high_points = []
+    for group in pivotsReadyOrNot:
+        for p in group:
+            all_high_points.append(p)
+    
+    # Sort by date to ensure we are looking forward in time
+    all_high_points.sort(key=lambda x: x[2]) 
+
+    if len(all_high_points) < 2:
+        return {"Bool": False}
+
+    # Iterate through potential Cup-Handle pairs
+    for i in range(len(all_high_points) - 1):
+        cup_rim = all_high_points[i]
+        
+        for j in range(i + 1, len(all_high_points)):
+            handle_rim = all_high_points[j]
             
-    return {"Bool":False}
+            # 1. Distance Check: A cup takes time (usually 7+ weeks)
+            # Adjust the index difference based on your data frequency (daily/hourly)
+            if (handle_rim[2] - cup_rim[2]) < 30: 
+                continue
+
+            dateFirst = cup_rim[1]
+            dateSecond = handle_rim[1]
+            
+            # 2. Depth Check for the Cup (Distance between Cup Rim and Handle Rim)
+            # This looks at the "valley" between the two peaks
+            cup_data = DepthBetweenHandlesAndPotential(stock, dateFirst, dateSecond)
+            
+            if cup_data and cup_data[0] >= 23: # Cup must be deep enough (23%)
+                
+                # 3. Handle Depth Check (From Handle Rim to Current/Potential Low)
+                # We check from the handle_rim to the most recent data point
+                last_date = stock.high_prices_3y.index[-1].strftime('%Y-%m-%d')
+                handle_data = DepthBetweenHandlesAndPotential(stock, dateSecond, last_date)
+                
+                if handle_data and handle_data[0] >= 6: 
+                    
+                    
+                    return {
+                        "Bool": True,
+                        "Result": [dateFirst, dateSecond]
+                    }
+            
+    return {"Bool": False}
 
 #HELPER FUNCTIONS TO DO GENERAL THINGS LIKE FILTER AND STUFF
 

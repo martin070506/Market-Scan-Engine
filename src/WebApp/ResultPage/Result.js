@@ -1,9 +1,15 @@
 //const API_BASE = "https://market-scan-engine.onrender.com";
 const API_BASE = "http://127.0.0.1:8000";
+let sma150Slow = []
+let sma150Fast = []
+let sma200Slow = []
+let sma200Fast = []
+let sma20Below = []
+let sma20Above = []
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function renderStocks(bodyId, badgeId, stocks) {
+function renderStocks(bodyId, badgeId, stocks, showToolbar = false) {
     const body = document.getElementById(bodyId);
     const badge = document.getElementById(badgeId);
 
@@ -15,11 +21,72 @@ function renderStocks(bodyId, badgeId, stocks) {
 
     badge.textContent = stocks.length;
 
-    const pillsHtml = stocks
-        .map(s => `<span class="stock-pill">${s}</span>`)
-        .join('');
+    const stocksHtml = stocks.map((s, idx) => {
+        let ticker = '';
+        let subText = '';
+        let dates = [];
+        const uid = `${bodyId}-stock-${idx}`;
 
-    body.innerHTML = `<div class="stock-list">${pillsHtml}</div>`;
+        if (Array.isArray(s) && s.length === 2) {
+            ticker = s[0];
+            subText = s[1];
+        }
+        else if (typeof s === 'object' && s !== null) {
+            ticker = s.Stock ?? '—';
+            dates = Array.isArray(s.Data) ? s.Data : [];
+        }
+        else {
+            ticker = s;
+        }
+
+        // --- Complex Format: Cup & Handle (Vertical/Collapsible) ---
+        if (dates.length > 0) {
+            const datesHtml = dates.map(d => `<div class="pivot-set-label" style="margin: 4px 0; font-size: 0.85em; opacity: 0.8;">• ${d}</div>`).join('');
+
+            return `
+                <div class="pivot-stock" id="${uid}" style="width: 100%; margin-bottom: 8px;">
+                    <button class="pivot-stock-header" onclick="togglePivot('${uid}')">
+                        <span class="pivot-ticker">${ticker}</span>
+                        <span class="pivot-meta">
+                            <span class="pivot-count">${dates.length} points</span>
+                            <span class="pivot-chevron">▸</span>
+                        </span>
+                    </button>
+                    <div class="pivot-sets-grid" style="display:none; padding: 12px;">
+                        <div class="pivot-set">
+                            <div class="pivot-set-label" style="color: var(--accent); font-weight: 800;">Pattern Dates</div>
+                            ${datesHtml}
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // --- Simple Format: MA Pairs (Horizontal/Pills) ---
+        const isAbove = subText.toLowerCase() === 'above';
+        const statusColor = isAbove ? '#fcbf18' : '#fcbf18'; // Green for Above, Red for Below
+        const labelMarkup = subText ? `<span style="margin-left: 6px; font-size: 0.7em; color: ${statusColor}; font-weight: 800;">${subText}</span>` : '';
+
+        return `
+            <div class="stock-pill" style="display: flex; align-items: center; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.03); white-space: nowrap;">
+                <span style="font-weight: 700; font-size: 0.9em; letter-spacing: 0.5px;">${ticker}</span>
+                ${labelMarkup}
+            </div>`;
+    }).join('');
+
+    const toolbarHtml = showToolbar ? `
+        <div class="pivot-toolbar" style="display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 4px; width: 100%;">
+            <button class="pivot-collapse-btn" onclick="collapseAllPivots('${bodyId}')">Collapse all</button>
+            <button class="pivot-collapse-btn" onclick="expandAllPivots('${bodyId}')">Expand all</button>
+        </div>` : '';
+
+    // The "flex-wrap: wrap" on the container is what makes them sit next to each other
+    body.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+            ${toolbarHtml}
+            <div class="stock-list-container" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">
+                ${stocksHtml}
+            </div>
+        </div>`;
 }
 
 // Renders pivot data: array of { Stock, Data } objects
@@ -132,6 +199,9 @@ function setStatus(state, text) {
     document.getElementById('status-text').textContent = text;
 }
 
+
+
+
 // ── Main fetch ────────────────────────────────────────────────────────────────
 
 async function fetchResults() {
@@ -172,15 +242,24 @@ async function fetchResults() {
             get('above-from-20-above-2x-atr'),
             get('below-from-20-above-2x-atr'),
         ]);
+        sma20Above = above20.stocks
+        sma20Below = below20.stocks
+        sma150Slow = filterPairsStockStatus(close150Slow.stocks)
+        sma150Fast = filterPairsStockStatus(close150_3atr.stocks)
+        sma200Slow = filterPairsStockStatus(close200Slow.stocks)
+        sma200Fast = filterPairsStockStatus(close200_3atr.stocks)
 
-        renderStocks('body-cup-handle', 'badge-cup-handle', cupHandle?.stocks);
-        renderStocks('body-double-bottom', 'badge-double-bottom', doubleBottom?.stocks);
-        renderStocks('body-150-slow', 'badge-150-slow', close150Slow?.stocks);
-        renderStocks('body-150-3atr', 'badge-150-3atr', close150_3atr?.stocks);
-        renderStocks('body-200-slow', 'badge-200-slow', close200Slow?.stocks);
-        renderStocks('body-200-3atr', 'badge-200-3atr', close200_3atr?.stocks);
-        renderStocks('body-above-20', 'badge-above-20', above20?.stocks);
-        renderStocks('body-below-20', 'badge-below-20', below20?.stocks);
+        // Add 'true' to show buttons for Cup & Handle
+        renderStocks('body-cup-handle', 'badge-cup-handle', cupHandle?.stocks, true);
+
+        // Keep 'false' (or omit) for MA sections to hide buttons
+        renderStocks('body-double-bottom', 'badge-double-bottom', doubleBottom?.stocks, false);
+        renderStocks('body-150-slow', 'badge-150-slow', close150Slow?.stocks, false);
+        renderStocks('body-150-3atr', 'badge-150-3atr', close150_3atr?.stocks, false);
+        renderStocks('body-200-slow', 'badge-200-slow', close200Slow?.stocks, false);
+        renderStocks('body-200-3atr', 'badge-200-3atr', close200_3atr?.stocks, false);
+        renderStocks('body-above-20', 'badge-above-20', above20?.stocks, false);
+        renderStocks('body-below-20', 'badge-below-20', below20?.stocks, false);
 
         // Min/Max pivots — unwrap if needed, then render
         // API may return the array directly, or wrapped as { stocks: [...] } or { data: [...] }
@@ -206,5 +285,38 @@ async function fetchResults() {
             });
     }
 }
+
+function filterPairsStockStatus(listOfPairs) {
+    let resultList = []
+    for (pair of listOfPairs) {
+        resultList.push(pair[0])
+    }
+    return resultList
+
+}
+
+function copyToClipboard(list) {
+    if (list.length === 0) {
+        console.warn("List is empty, nothing to copy.");
+        return;
+    }
+
+    // .join(",") turns ['A', 'B'] into "A,B"
+    const textToCopy = list.join(",");
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        console.log("Copied to clipboard: " + textToCopy);
+    }).catch(err => {
+        console.error("Failed to copy: ", err);
+    });
+}
+
+// Your 6 functions calling the helper
+function copy150Slow() { copyToClipboard(sma150Slow); }
+function copy150Fast() { copyToClipboard(sma150Fast); }
+function copy200Slow() { copyToClipboard(sma200Slow); }
+function copy200Fast() { copyToClipboard(sma200Fast); }
+function copy20Below() { copyToClipboard(sma20Below); }
+function copy20Above() { copyToClipboard(sma20Above); }
 
 fetchResults();
