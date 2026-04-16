@@ -99,11 +99,14 @@
                             <h2>Ingest Market Data</h2>
                             <p>Upload your OHLCV .csv to initialize pattern recognition</p>
                             <input type="file" id="file-input" hidden accept=".csv">
-                            <button class="btn-secondary">Browse Files</button>
+                            <button class="btn-secondary" id="browse-btn">Browse Files</button>
                         </div>
+
+                        <div id="upload-status" class="upload-status-container"></div>
                     </div>
                 </div>
             </section>
+            <script src="MainPage.js"></script>
         </main>
 
         <footer>
@@ -113,20 +116,7 @@
         </footer>
     </div>
 
-    <script>
-        // Reveal Logic
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) entry.target.classList.add('visible');
-            });
-        }, { threshold: 0.1 });
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-        // Upload Logic
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        dropZone.addEventListener('click', () => fileInput.click());
-    </script>
 </body>
 
 </html>

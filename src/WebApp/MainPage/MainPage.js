@@ -1,46 +1,53 @@
-// Reveal-on-scroll using IntersectionObserver
-const revealElements = document.querySelectorAll(".reveal");
+
 //const API_BASE = window.CONFIG.API_BASE;
 const API_BASE = "https://market-scan-engine.onrender.com";
 
-//const API_BASE = "http://127.0.0.1:8000"; //THIS MAKES IT LOCAL WE WILL MAKE IT PUBLIC AGAIN
-const observer = new IntersectionObserver(
-    (entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add("visible");
-                observer.unobserve(entry.target);
-            }
-        });
-    },
-    {
-        threshold: 0.18
-    }
-);
 
-revealElements.forEach((el) => observer.observe(el));
 
-// Footer year
-const yearEl = document.getElementById("year");
-if (yearEl) {
-    yearEl.textContent = new Date().getFullYear();
-}
+// 1. CONFIGURATION
+// Switch this to your Back4App URL when deploying
+//const API_BASE = "http://127.0.0.1:8000";
 
-// Upload logic
+// 2. UI ELEMENTS
 const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
 const browseBtn = document.getElementById("browse-btn");
 const statusEl = document.getElementById("upload-status");
+const revealElements = document.querySelectorAll(".reveal");
 
-// Helpers
+// 3. REVEAL ANIMATION (Intersection Observer)
+const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.18 });
+
+revealElements.forEach((el) => revealObserver.observe(el));
+
+// 4. HELPERS
 function setStatus(message, type = "info") {
     if (!statusEl) return;
-    let className = "";
-    if (type === "error") className = "status-error";
-    else if (type === "success") className = "status-success";
-    else if (type === "loading") className = "status-loading";
+    statusEl.style.display = "block"; // Ensure it's visible
 
-    statusEl.innerHTML = `<span class="${className}">${message}</span>`;
+    let icon = "⚙️";
+    let className = "status-loading";
+
+    if (type === "error") {
+        icon = "❌";
+        className = "status-error";
+    } else if (type === "success") {
+        icon = "✅";
+        className = "status-success";
+    }
+
+    statusEl.innerHTML = `
+        <div class="status-wrapper ${className}">
+            <span>${icon}</span> ${message}
+        </div>
+    `;
 }
 
 function isCsvFile(file) {
@@ -50,116 +57,103 @@ function isCsvFile(file) {
     return name.endsWith(".csv") || type === "text/csv" || type === "application/vnd.ms-excel";
 }
 
-// Handle dropzone visual state
-function setDragOver(isOver) {
-    if (!dropZone) return;
-    if (isOver) dropZone.classList.add("drag-over");
-    else dropZone.classList.remove("drag-over");
-}
-
-// File upload (client-side)
-async function uploadFile(file) {
+// 5. UPLOAD & LOGIC EXECUTION
+async function handleFileUpload(file) {
     if (!file) return;
 
     if (!isCsvFile(file)) {
-        setStatus("Please upload a .csv file.", "error");
+        setStatus("Invalid file type. Please provide a .csv file.", "error");
         return;
     }
 
-    setStatus(`Uploading "${file.name}"…`, "loading");
+    setStatus(`Uploading ${file.name}...`, "loading");
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-        const response = await fetch(`${API_BASE}/upload`, {
+        // --- STEP 1: UPLOAD ---
+        const uploadResponse = await fetch(`${API_BASE}/upload`, {
             method: "POST",
             body: formData
         });
 
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            setStatus(result.error || `Server error (${response.status})`, "error");
-            return;
+        if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json().catch(() => ({}));
+            throw new Error(errorData.error || `Upload failed (${uploadResponse.status})`);
         }
 
-        if (!result.success) {
-            setStatus(result.error || "Upload failed (invalid CSV).", "error");
-            return;
+        setStatus("Analyzing market data...", "loading");
+
+        // --- STEP 2: RUN LOGIC ---
+        const runResponse = await fetch(`${API_BASE}/run_logic`, {
+            method: "POST",
+            body: formData
+        });
+
+        if (!runResponse.ok) {
+            throw new Error("Pattern recognition failed.");
         }
 
-        setStatus(result.message || "Upload complete.", "success");
+        const data = await runResponse.json();
 
-        await callPythonWithFile(formData);
+        if (data.result_id) {
+            setStatus("Success! Redirecting to Terminal...", "success");
+            localStorage.setItem("resultId", JSON.stringify(data.result_id));
+
+            // Short delay so user sees the success message
+            setTimeout(() => {
+                window.location.href = `../ResultPage/Result.html?id=${data.result_id}`;
+            }, 1000);
+        } else {
+            throw new Error("Backend did not return a Result ID.");
+        }
 
     } catch (err) {
-        console.error(err);
-        setStatus("Upload failed. Please try again or check the server.", "error");
+        console.error("Pipeline Error:", err);
+        setStatus(err.message, "error");
     }
 }
 
-
-async function callPythonWithFile(formData) {
-    console.log("Calling Python backend with file...");
-    const response = await fetch(`${API_BASE}/run_logic`, {
-        method: "POST",
-        body: formData
-    });
-    const data = await response.json().catch(() => ({}));
-    localStorage.setItem(("resultId"), JSON.stringify(data.result_id));
-    console.log("About to redirect With ID: ", data.result_id)
-    window.location.href = `../ResultPage/Result.html?id=${data.result_id}`;
-    console.log("this shouldnt print")
-}
-
-// Browse button click opens file dialog
+// 6. EVENT LISTENERS
 if (browseBtn && fileInput) {
     browseBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        e.stopPropagation();
         fileInput.click();
-
     });
 
     fileInput.addEventListener("change", (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (file) {
-            uploadFile(file);
+        if (e.target.files.length > 0) {
+            handleFileUpload(e.target.files[0]);
         }
     });
 }
 
-// Drag & drop handling
-if (dropZone && fileInput) {
-    ["dragenter", "dragover"].forEach((eventName) => {
-        dropZone.addEventListener(eventName, (e) => {
+if (dropZone) {
+    // Prevent defaults for drag events
+    ["dragenter", "dragover", "dragleave", "drop"].forEach(name => {
+        dropZone.addEventListener(name, (e) => {
             e.preventDefault();
             e.stopPropagation();
-            setDragOver(true);
         });
     });
 
-    ["dragleave", "drop"].forEach((eventName) => {
-        dropZone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setDragOver(false);
-        });
-    });
+    // Visual states
+    dropZone.addEventListener("dragover", () => dropZone.classList.add("drag-over"));
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
 
     dropZone.addEventListener("drop", (e) => {
-        const dt = e.dataTransfer;
-        const file = dt && dt.files && dt.files[0];
-        if (file) {
-            uploadFile(file);
-        }
+        dropZone.classList.remove("drag-over");
+        const file = e.dataTransfer.files[0];
+        handleFileUpload(file);
     });
 
-    // Also allow click on the entire drop zone to open file dialog
-    dropZone.addEventListener("click", () => {
-        fileInput.click();
+    // Make entire zone clickable
+    dropZone.addEventListener("click", (e) => {
+        if (e.target !== browseBtn) fileInput.click();
     });
 }
 
-
+// 7. FOOTER
+const yearEl = document.getElementById("year");
+if (yearEl) yearEl.textContent = new Date().getFullYear();
