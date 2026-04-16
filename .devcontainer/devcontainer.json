@@ -1,29 +1,33 @@
 {
-  "name": "Python 3.13 Dev Container",
+  "name": "StockBot ML Environment",
   "build": {
     "dockerfile": "../Dockerfile",
     "context": ".."
   },
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  // Ensure the workspace matches your Dockerfile WORKDIR
+  "workspaceFolder": "/workspaces/StockBot",
   "customizations": {
     "vscode": {
       "settings": {
-        "terminal.integrated.cwd": "${workspaceFolder}",
+        // Updated to the standard path for a user-install in this image
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "editor.formatOnSave": true
+        "terminal.integrated.cwd": "/workspaces/StockBot",
+        "editor.formatOnSave": true,
+        "python.analysis.extraPaths": [
+          "/home/vscode/.local/bin"
+        ]
       },
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "ms-toolsai.jupyter",
         "ms-azuretools.vscode-docker",
-        "charliermarsh.ruff",
-        "ms-python.black-formatter",
-        "eamodio.gitlens"
+        "charliermarsh.ruff"
       ]
     }
   },
-  "postCreateCommand": "python -m pip install --upgrade pip && pip install -r requirements.txt",
+  // We keep this to ensure the workspace is always fresh, 
+  // but the Dockerfile handles the initial heavy install.
+  "postCreateCommand": "pip install --user -r requirements.txt",
   "forwardPorts": [
     8000
   ],
