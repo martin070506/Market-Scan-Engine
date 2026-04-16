@@ -19,3 +19,6 @@ flake8
 yfinance
 cryptography
 lxml
+pandas_ta
+scikit-learn
+firebase-admin

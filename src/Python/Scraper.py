@@ -1,13 +1,41 @@
 import uuid
 from fastapi import FastAPI, UploadFile, File,HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import joblib
 from pydantic import BaseModel
 import pandas as pd
 import yfinance as yf
 import numpy as np
 from dataclasses import dataclass
 import math
+from pydantic import BaseModel
+from typing import List
 app = FastAPI()
+
+class MLRequest(BaseModel):
+    tickers: List[str]
+
+@app.post("/run-ml-analysis")
+async def run_ml_analysis(data: MLRequest):
+    try:
+        # data.tickers is the list sent from the JS
+        # Calling your Scan_Tickers function
+        raw_results = Scan_Tickers(data.tickers)
+        
+        # Formatting results into a clean dictionary list
+        # Expected raw_results: [("AAPL", 0.85), ("TSLA", 0.42)]
+        formatted_results = [
+            {"ticker": ticker, "probability": round(prob * 100, 2)} 
+            for ticker, prob in raw_results
+        ]
+        
+        # Sort by highest probability first
+        formatted_results.sort(key=lambda x: x['probability'], reverse=True)
+        
+        return {"success": True, "results": formatted_results}
+    except Exception as e:
+        print(f"ML Error: {e}")
+        return {"success": False, "error": str(e)}
 
 @dataclass
 class StockInfo:
@@ -738,8 +766,8 @@ def Is_Stock_Close_to_avg(stock, avg_window: int):
         
         current_price = prices.iloc[-1]
         
-        lower_bound = sma_val * 0.96
-        upper_bound = sma_val * 1.04
+        lower_bound = sma_val * 0.97
+        upper_bound = sma_val * 1.03
         
         if ((sma_val < current_price <= upper_bound) and stock.atr>3):
             return {"Ticker":stock.ticker,"Status": 'ABOVE',"ATR_Match":True}
@@ -956,11 +984,255 @@ def CheckCupHandle(stock, pivotsReadyOrNot):
 """THIS IS GONNA BE THE ML PART, WERE GONNA SE WHAT PATTERNS LEAD TO SUCCESS AT THE SMA 20 TRADE
 MEANING WHEN A STOCK IS FAR AND ITS LIKE A MAGNET WE CAN TRADE ON IT, FROM HERE BEGINS THE JOURNEY"""
 
+def commaSeparatedInputToListOfTickers():
+   
+    input_string = input("Enter stock tickers separated by commas: ")
+    tickers = [ticker.strip().upper() for ticker in input_string.split(",")]
+    return tickers
+
+
+from sklearn.ensemble import RandomForestClassifier
+import pandas_ta as ta
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+import firebase_admin
+from firebase_admin import credentials, db,firestore
+import gc
+# Use db from firebase_admin
+import os
+import pickle
+import base64
+import gc
+from firebase_admin import firestore
+import joblib
+
+
+
+
+
+print("GATHERING INFO")
+
+
+
+def apply_indicators(df):
+    """
+    Cleans MultiIndex columns, calculates Target (Mean Reversion), 
+    and returns ONLY normalized features.
+    """
+    # 1. FIX THE 'HIGH' ERROR (Ironclad Column Flattening)
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    df.columns = [str(col).strip() for col in df.columns]
+
+    # Ensure download was successful
+    required = ['Open', 'High', 'Low', 'Close', 'Volume']
+    if not all(col in df.columns for col in required):
+        return None
+
+    # 2. EXTRACT RAW SERIES
+    close = df['Close'].squeeze()
+    high = df['High'].squeeze()
+    low = df['Low'].squeeze()
+    vol = df['Volume'].squeeze()
+    
+    # 3. BASE CALCS (Used for features and targets)
+    sma20 = ta.sma(close, 20)
+    sma50 = ta.sma(close, 50)
+    sma150 = ta.sma(close, 150)
+    atr = ta.atr(high, low, close, 14)
+    rsi = ta.rsi(close, 14)
+
+    # 4. TARGET LOGIC (5-Day Mean Reversion to SMA20)
+    # Target 1 = Success (Price hit SMA20 within 5 days)
+    df['Target'] = 0
+    for i in range(len(df) - 5):
+        future_highs = high.iloc[i+1 : i+6]
+        future_smas = sma20.iloc[i+1 : i+6]
+        if (future_highs >= future_smas).any():
+            df.at[df.index[i], 'Target'] = 1
+
+    # 5. NORMALIZED FEATURE ENGINEERING
+    # We use (ATR + 0.0001) to avoid dividing by zero
+    df['stretch'] = (sma20 - close) / (atr + 0.0001)
+    df['SMA50_STRETCH'] = (sma50 - close) / (atr + 0.0001)
+    df['SMA150_STRETCH'] = (sma150 - close) / (atr + 0.0001)
+    df['volume_ratio'] = vol / (vol.rolling(20).mean() + 0.0001)
+    df['RSI_Norm'] = rsi / 100.0  
+    df['ROC'] = close.pct_change(5)
+    df['CCI_Norm'] = ta.cci(high, low, close, 14) / 100.0 
+    
+    bb = ta.bbands(close, length=20)
+    if bb is not None:
+        df['BB_Width'] = (bb.iloc[:, 2] - bb.iloc[:, 0]) / (sma20 + 0.0001)
+    
+    df['Closed_At_Range'] = (close - low) / (high - low + 0.0001)
+    df['RSI_Slope'] = df['RSI_Norm'].diff(3)
+    df['ATR_Ratio'] = atr / (atr.rolling(20).mean() + 0.0001)
+    df['Vol_Shock'] = (vol - vol.rolling(20).mean()) / (vol.rolling(20).std() + 0.0001)
+    df['Price_Speed'] = df['ROC'].diff(2)
+    df['Dist_From_Low'] = (close - low.rolling(5).min()) / (atr + 0.0001)
+
+    # 6. FILTER: ONLY TEACH THE MODEL ABOUT "STRETCHED" DAYS
+    # We only care about setups where price is > 0.5 ATR below SMA20
+    df = df[df['stretch'] > 0.5].copy()
+
+    # 7. SELECT FINAL FEATURE COLUMNS
+    features = [
+        'stretch', 'SMA50_STRETCH', 'SMA150_STRETCH', 'volume_ratio', 
+        'RSI_Norm', 'ROC', 'CCI_Norm', 'BB_Width', 'Closed_At_Range', 
+        'RSI_Slope', 'ATR_Ratio', 'Vol_Shock', 'Price_Speed', 'Dist_From_Low'
+    ]
+    
+    return df[features + ['Target']].dropna()
+
+def train_and_save_locally(ticker_list):
+    """Downloads data, applies indicators, trains RF, and saves to disk."""
+    master_data = []
+    
+    print(f"--- Starting Education Phase with {len(ticker_list)} tickers ---")
+    
+    for ticker in ticker_list:
+        try:
+            # Download 3y to have enough history for SMAs
+            df = yf.download(ticker, period='3y', progress=False)
+            if df.empty: continue
+            
+            processed_df = apply_indicators(df)
+            
+            if processed_df is not None and not processed_df.empty:
+                master_data.append(processed_df)
+                print(f"✅ {ticker}: Processed {len(processed_df)} setups.")
+            
+            gc.collect() # Reset RAM after each ticker
+        except Exception as e:
+            print(f"❌ {ticker}: Failed due to {e}")
+
+    if not master_data:
+        return print("Error: No data was collected. Check your ticker list.")
+
+    # Merge all tickers into one massive training table
+    full_df = pd.concat(master_data)
+    
+    # Define X (features) and y (target)
+    feature_cols = [c for c in full_df.columns if c != 'Target']
+    X = full_df[feature_cols]
+    y = full_df['Target']
+
+    # SPLIT DATA: Train on 80%, Test on 20% (Prevents 100% fake accuracy)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    print(f"\nTraining on {len(X_train)} samples...")
+    model = RandomForestClassifier(n_estimators=100, max_depth=12, random_state=42)
+    model.fit(X_train, y_train)
+
+    # Validate
+    accuracy = model.score(X_test, y_test)
+    print(f"--- TRAINING COMPLETE ---")
+    print(f"Real-World Accuracy: {accuracy*100:.2f}%")
+    
+    # Save everything into one local file
+    model_payload = {
+        'model': model,
+        'features': feature_cols,
+        'accuracy': accuracy
+    }
+    joblib.dump(model_payload, 'trading_model.joblib')
+    print("📁 Model saved locally as 'trading_model.joblib'")
+    
+    return model
+
+# --- 3. DOWNLOAD MODEL ---
+def load_local_model():
+    """Loads the model from the local disk into RAM."""
+    file_path = 'trading_model.joblib'
+    
+    if os.path.exists(file_path):
+        data = joblib.load(file_path)
+        print(f"✅ Local brain loaded. Accuracy: {data['accuracy']:.2f}")
+        return data['model'], data['features']
+    else:
+        print("❌ No local model file found. Run 'TRAIN' mode first.")
+        return None, None
+
+
+
+
+    """Fetches stats from Realtime Database."""
+    return db.reference("model_stats").get()
+
+
+
+def scan_stock(ticker, model, feature_cols):
+    """Single stock prediction using local model."""
+    df = yf.download(ticker, period="200d", progress=False)
+    df = apply_indicators(df)
+    current_setup = df[feature_cols].tail(1)
+    
+    if current_setup.isnull().values.any(): return None
+    return model.predict_proba(current_setup)[0][1]
+
+
+
+features = ['stretch', 'ATR', 'SMA50_STRETCH', 'SMA150_STRETCH', 'RSI', 'volume_ratio', 'OBV', 'ROC', 
+            'BB_Width', 'Closed_At_Range', 'RSI_Slope', 'CCI', 'Dist_From_Low', 'ATR_Ratio', 'Vol_Shock', 'Price_Speed']
+
+# --- EXECUTION ---
+# Change to "TRAIN" once, then "SCAN" forever after.
+MODE = "SCAN" 
+
+if MODE == "TRAIN":
+    tickers = commaSeparatedInputToListOfTickers() # Your list
+    active_model = train_and_save_locally(tickers)
+
+
+    
+
+#this assumes theres already a model trained and saved locally, if not it will throw an error, but you can change the code to train if no model is found
+def Scan_Tickers(list_tickers):
+    results=[]
+    active_model, active_features = load_local_model()
+    if active_model:
+        for ticker in list_tickers:
+            prob = scan_stock(ticker, active_model, active_features)
+            results.append((ticker, prob))
+    return results
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# --- EXAMPLE USAGE ---
+
+
+# target_tickers =    ["TSLA","NVDA","AAPL","AMZN","MSFT","OKLO","ASTS","BBAI","SCO","HOOD"]  # You can change this to any ticker you want to scan
+
+# for target_ticker in target_tickers:
+#     chance = scan_stock(target_ticker)
+
+#     if isinstance(chance, str):
+#         print(f"Error: {chance}")
+#     else:
+#         print(f"Result for {target_ticker} ====> {chance * 100:.2f}% probability of touching SMA20")
 
 

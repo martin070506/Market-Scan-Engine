@@ -173,6 +173,43 @@
 
         </div>
 
+        <div class="group-title">Predictive Intelligence Engine</div>
+        <div class="ml-container reveal">
+            <div class="glass-card ml-card">
+                <div class="card-header">
+                    <div class="card-icon">🧠</div>
+                    <div class="card-title">SMA Deviation Analysis</div>
+                    <div class="tag-green">ML MODEL V2.4</div>
+                </div>
+
+                <div class="ml-description">
+                    Utilize our proprietary Neural Network to evaluate momentum decay and mean reversion probabilities
+                    for equities significantly extended from their Simple Moving Averages.
+                </div>
+
+                <div class="ml-input-group">
+                    <label for="ticker-input" class="metric-label">Target Asset Pool</label>
+                    <textarea id="ticker-input"
+                        placeholder="ENTER TICKERS SEPARATED BY COMMAS (E.G. NVDA, TSLA, AAPL...)"
+                        class="terminal-textarea"></textarea>
+                </div>
+
+                <div class="ml-footer">
+                    <p class="mono" style="font-size: 0.7rem; color: var(--text-dim);">
+                        [SYSTEM] Awaiting sequence input for algorithmic validation.
+                    </p>
+                    <button id="run-ml-model" class="btn-primary ml-btn">
+                        Execute Model
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="13 17 18 12 13 7"></polyline>
+                            <polyline points="6 17 11 12 6 7"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /page -->
 
     <script src="Result.js"></script>

@@ -311,6 +311,79 @@ function copyToClipboard(list) {
     });
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const mlBtn = document.getElementById('run-ml-model');
+    const tickerInput = document.getElementById('ticker-input');
+    const mlContainer = document.querySelector('.ml-container');
+
+    mlBtn.addEventListener('click', async () => {
+        const rawValue = tickerInput.value.trim();
+        if (!rawValue) return alert("Please enter tickers.");
+
+        const tickerList = rawValue.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
+
+        // 1. Enter Loading State
+        mlBtn.innerHTML = `Computing... <span class="state-loading"></span>`;
+        mlBtn.style.pointerEvents = "none";
+
+        try {
+            const response = await fetch(`${API_BASE}/run-ml-analysis`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tickers: tickerList })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // 2. Minimize the Input Area
+                const inputGroup = document.querySelector('.ml-input-group');
+                const description = document.querySelector('.ml-description');
+
+                // Smoothly hide the elements
+                inputGroup.style.display = 'none';
+                description.style.display = 'none';
+
+                // 3. Render the Results
+                renderMLResults(data.results);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Connection error to ML Engine.");
+        } finally {
+            mlBtn.innerHTML = `Execute Model`;
+            mlBtn.style.pointerEvents = "auto";
+        }
+    });
+});
+
+function renderMLResults(results) {
+    const footer = document.querySelector('.ml-footer');
+
+    // Create results container if it doesn't exist
+    let resultsDiv = document.getElementById('ml-results-list');
+    if (!resultsDiv) {
+        resultsDiv = document.createElement('div');
+        resultsDiv.id = 'ml-results-list';
+        resultsDiv.className = 'ml-results-grid';
+        // Insert before the footer
+        footer.parentNode.insertBefore(resultsDiv, footer);
+    }
+
+    resultsDiv.innerHTML = results.map(res => {
+        const color = res.probability > 70 ? 'var(--accent2)' : (res.probability > 40 ? 'var(--accent)' : 'var(--muted)');
+        return `
+            <div class="ml-result-item" style="border-left: 3px solid ${color}">
+                <span class="ml-ticker">${res.ticker}</span>
+                <div class="ml-prob-container">
+                    <span class="ml-prob-val">${res.probability}%</span>
+                    <div class="ml-prob-bar"><div class="ml-prob-fill" style="width: ${res.probability}%; background: ${color}"></div></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 // Your 6 functions calling the helper
 function copy150Slow() { copyToClipboard(sma150Slow); }
 function copy150Fast() { copyToClipboard(sma150Fast); }

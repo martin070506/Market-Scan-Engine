@@ -588,3 +588,208 @@ header .scan-id {
 .pivot-table td:nth-child(3) {
     color: var(--muted);
 }
+
+/* ML Model Styling */
+.ml-container {
+    margin-top: 2rem;
+    margin-bottom: 4rem;
+}
+
+.ml-card {
+    border: 1px solid rgba(0, 255, 163, 0.2) !important;
+    background: linear-gradient(145deg, rgba(15, 20, 35, 0.8), rgba(3, 5, 12, 0.9));
+}
+
+.ml-description {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.ml-input-group {
+    margin-bottom: 1.5rem;
+}
+
+.terminal-textarea {
+    width: 100%;
+    height: 120px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    resize: none;
+    transition: 0.3s;
+    outline: none;
+    margin-top: 0.5rem;
+}
+
+.terminal-textarea:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 15px rgba(0, 255, 163, 0.1);
+}
+
+.ml-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+
+
+@media (max-width: 768px) {
+    .ml-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ml-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+
+.ml-btn {
+    /* Layout & Shape */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 36px;
+    border-radius: 100px;
+    /* Modern Pill Shape */
+
+    /* Colors & Glass Effect */
+    background: linear-gradient(135deg, #00ffa3 0%, #00d186 100%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #03050c;
+    /* High contrast black text */
+
+    /* Typography */
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    /* High-End Effects */
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 8px 24px rgba(0, 255, 163, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+/* The "Shimmer" Animation */
+.ml-btn::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 20%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: rotate(30deg);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Hover State */
+.ml-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 15px 40px rgba(0, 255, 163, 0.4),
+        0 0 0 4px rgba(0, 255, 163, 0.1);
+    background: linear-gradient(135deg, #05ffaa 0%, #00ffa3 100%);
+}
+
+.ml-btn:hover::after {
+    left: 120%;
+}
+
+/* Active/Click State */
+.ml-btn:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 5px 15px rgba(0, 255, 163, 0.3);
+}
+
+/* Ensure the icon moves slightly on hover */
+.ml-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.ml-btn:hover svg {
+    transform: translateX(4px);
+}
+
+
+.ml-results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 2rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.ml-result-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px 16px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ml-ticker {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+.ml-prob-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ml-prob-val {
+    font-size: 0.8rem;
+    font-weight: 700;
+    min-width: 40px;
+}
+
+.ml-prob-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.ml-prob-fill {
+    height: 100%;
+    transition: width 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Minimize Logic helpers */
+.ml-input-group,
+.ml-description {
+    transition: all 0.3s ease;
+}
