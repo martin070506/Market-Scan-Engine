@@ -1,5 +1,5 @@
-//const API_BASE = "https://market-scan-engine.onrender.com";
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://market-scan-engine.onrender.com";
+//const API_BASE = "http://127.0.0.1:8000";
 let sma150Slow = []
 let sma150Fast = []
 let sma200Slow = []

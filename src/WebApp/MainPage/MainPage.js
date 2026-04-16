@@ -1,8 +1,9 @@
 // Reveal-on-scroll using IntersectionObserver
 const revealElements = document.querySelectorAll(".reveal");
 //const API_BASE = window.CONFIG.API_BASE;
+const API_BASE = "https://market-scan-engine.onrender.com";
 
-const API_BASE = "http://127.0.0.1:8000"; //THIS MAKES IT LOCAL WE WILL MAKE IT PUBLIC AGAIN
+//const API_BASE = "http://127.0.0.1:8000"; //THIS MAKES IT LOCAL WE WILL MAKE IT PUBLIC AGAIN
 const observer = new IntersectionObserver(
     (entries) => {
         entries.forEach((entry) => {
