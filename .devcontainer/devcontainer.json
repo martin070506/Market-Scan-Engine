@@ -1,32 +1,23 @@
 {
   "name": "StockBot ML Environment",
   "build": {
-    "dockerfile": "../Dockerfile",
+    "dockerfile": "Dockerfile",
     "context": ".."
   },
-  // Ensure the workspace matches your Dockerfile WORKDIR
   "workspaceFolder": "/workspaces/StockBot",
   "customizations": {
     "vscode": {
       "settings": {
-        // Updated to the standard path for a user-install in this image
         "python.defaultInterpreterPath": "/usr/local/bin/python",
         "terminal.integrated.cwd": "/workspaces/StockBot",
-        "editor.formatOnSave": true,
-        "python.analysis.extraPaths": [
-          "/home/vscode/.local/bin"
-        ]
+        "editor.formatOnSave": true
       },
       "extensions": [
         "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-azuretools.vscode-docker",
-        "charliermarsh.ruff"
+        "ms-python.vscode-pylance"
       ]
     }
   },
-  // We keep this to ensure the workspace is always fresh, 
-  // but the Dockerfile handles the initial heavy install.
   "postCreateCommand": "pip install --user -r requirements.txt",
   "forwardPorts": [
     8000

@@ -3,10 +3,8 @@ FROM python:3.13-slim
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    # Add the local bin to path
     PATH="/home/vscode/.local/bin:${PATH}" \
-    # Add the workspace to python path so imports inside Scraper.py work
-    PYTHONPATH="/workspaces/StockBot"
+    PYTHONPATH="/workspaces/StockBot/src/Python"
 
 RUN apt-get update && apt-get install -y \
     git \
@@ -28,14 +26,12 @@ RUN groupadd --gid $USER_GID $USERNAME \
 USER $USERNAME
 WORKDIR /workspaces/StockBot
 
-# Copy the requirements and code
-# This is vital for the deployment host to see your Scraper.py
+# Copy all files
 COPY --chown=vscode:vscode . .
 
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 EXPOSE 8000
 
-# THE KEY FIX: 
-# We tell uvicorn to look for the "app" object inside "Scraper.py"
-CMD ["python", "-m", "uvicorn", "Scraper:app", "--host", "0.0.0.0", "--port", "8000"]
+# Points to Scraper inside src/Python
+CMD ["python", "-m", "uvicorn", "src.Python.Scraper:app", "--host", "0.0.0.0", "--port", "8000"]
