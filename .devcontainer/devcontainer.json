@@ -1,13 +1,10 @@
 {
   "name": "Python 3.13 Dev Container",
-
   "build": {
-    "dockerfile": "Dockerfile",
+    "dockerfile": "../Dockerfile",
     "context": ".."
   },
-
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-
   "customizations": {
     "vscode": {
       "settings": {
@@ -26,10 +23,9 @@
       ]
     }
   },
-
   "postCreateCommand": "python -m pip install --upgrade pip && pip install -r requirements.txt",
-
-  "forwardPorts": [8000],
-
+  "forwardPorts": [
+    8000
+  ],
   "remoteUser": "vscode"
 }
