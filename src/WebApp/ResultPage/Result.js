@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Enter Loading State
         mlBtn.innerHTML = `Computing... <span class="state-loading"></span>`;
         mlBtn.style.pointerEvents = "none";
-
+        console.log("Running ML")
         try {
             const response = await fetch(`${API_BASE}/run-ml-analysis`, {
                 method: 'POST',

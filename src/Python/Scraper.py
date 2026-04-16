@@ -1143,17 +1143,26 @@ def train_and_save_locally(ticker_list):
 
 # --- 3. DOWNLOAD MODEL ---
 def load_local_model():
-    """Loads the model from the local disk into RAM."""
-    file_path = 'trading_model.joblib'
+    """Loads the model from the local disk into RAM using absolute paths."""
+    #  Get the absolute path of Scraper.py
     
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    project_root = os.path.join(current_dir, "..", "..")
+    file_path = os.path.join(project_root, "trading_model.joblib")
+    
+    #  Normalize the path (fixes slash issues between Windows/Linux)
+    file_path = os.path.abspath(file_path)
+
     if os.path.exists(file_path):
         data = joblib.load(file_path)
-        print(f"✅ Local brain loaded. Accuracy: {data['accuracy']:.2f}")
+        print(f"✅ Local brain loaded from: {file_path}")
+        print(f"✅ Accuracy: {data['accuracy']:.2f}")
         return data['model'], data['features']
     else:
-        print("❌ No local model file found. Run 'TRAIN' mode first.")
+        print(f"❌ No local model file found at: {file_path}")
+        print("💡 Check if the file is in the root directory and included in your Git commit.")
         return None, None
-
 
 
 
