@@ -29,3 +29,9 @@ USER $USERNAME
 # Do NOT COPY your project into the image.
 # VS Code will mount your local folder into /workspaces/<folder-name>.
 WORKDIR /workspaces/workspace
+
+# ... (at the bottom of your Dockerfile)
+EXPOSE 8000
+
+# Ensure the start command binds to 0.0.0.0
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
