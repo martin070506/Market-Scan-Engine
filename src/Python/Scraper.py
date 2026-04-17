@@ -996,14 +996,13 @@ import pandas_ta as ta
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import firebase_admin
-from firebase_admin import credentials, db,firestore
+from firebase_admin import db
 import gc
 # Use db from firebase_admin
 import os
 import pickle
 import base64
 import gc
-from firebase_admin import firestore
 import joblib
 
 
