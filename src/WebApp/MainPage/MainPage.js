@@ -1,12 +1,12 @@
 
 //const API_BASE = window.CONFIG.API_BASE;
-const API_BASE = "https://market-scan-engine.onrender.com";
+//const API_BASE = "https://market-scan-engine.onrender.com";
 
 
 
 // 1. CONFIGURATION
 // Switch this to your Back4App URL when deploying
-//const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://127.0.0.1:8000";
 
 // 2. UI ELEMENTS
 const dropZone = document.getElementById("drop-zone");
