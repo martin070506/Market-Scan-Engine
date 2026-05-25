@@ -329,3 +329,38 @@ footer {
     color: var(--text-dim);
     letter-spacing: 2px;
 }
+
+#User-Session-Name {
+    font-size: 0.8rem;
+
+    /* 1. Name the animation, set duration to 3 seconds, and make it repeat infinitely */
+    animation: colorFade 5s ease-in-out infinite;
+}
+
+/* 2. Define the fade steps */
+@keyframes colorFade {
+    0% {
+        color: #ff4d4d;
+
+    }
+
+    25% {
+        color: #d6e233;
+
+    }
+
+    50% {
+        color: #4aff80;
+
+    }
+
+    75% {
+        color: #d6e233;
+
+    }
+
+    100% {
+        color: #ff4d4d;
+
+    }
+}

@@ -2,7 +2,16 @@
 //const API_BASE = window.CONFIG.API_BASE;
 //const API_BASE = "https://market-scan-engine.onrender.com";
 
-
+if (!sessionStorage.getItem("username")) {
+    // If no username in session, redirect to login page
+    window.location.href = "../LoginPage/login.html";
+}
+const username = sessionStorage.getItem("username");
+sessionStorage.removeItem("DidUserScanBool"); // Clear this flag on main page load
+const sessionNameEl = document.getElementById("User-Session-Name");
+if (sessionNameEl) {
+    sessionNameEl.textContent = `User: ${username}`;
+}
 
 // 1. CONFIGURATION
 // Switch this to your Back4App URL when deploying
@@ -32,20 +41,18 @@ function setStatus(message, type = "info") {
     if (!statusEl) return;
     statusEl.style.display = "block"; // Ensure it's visible
 
-    let icon = "⚙️";
+
     let className = "status-loading";
 
     if (type === "error") {
-        icon = "❌";
         className = "status-error";
     } else if (type === "success") {
-        icon = "✅";
         className = "status-success";
     }
 
     statusEl.innerHTML = `
         <div class="status-wrapper ${className}">
-            <span>${icon}</span> ${message}
+             ${message}
         </div>
     `;
 }
@@ -78,6 +85,12 @@ async function handleFileUpload(file) {
             body: formData
         });
 
+        //Check for rate limit of uploading response first
+        if (uploadResponse.status === 429) {
+            alert("Too many requests from this device! Please wait a minute before analyzing more tickers.");
+            return;
+        }
+
         if (!uploadResponse.ok) {
             const errorData = await uploadResponse.json().catch(() => ({}));
             throw new Error(errorData.error || `Upload failed (${uploadResponse.status})`);
@@ -90,6 +103,11 @@ async function handleFileUpload(file) {
             method: "POST",
             body: formData
         });
+        //Check for rate limit of running logic response first
+        if (runResponse.status === 429) {
+            alert("Too many requests from this device! Please wait a minute before analyzing more tickers.");
+            return;
+        }
 
         if (!runResponse.ok) {
             throw new Error("Pattern recognition failed.");
@@ -103,6 +121,7 @@ async function handleFileUpload(file) {
 
             // Short delay so user sees the success message
             setTimeout(() => {
+                sessionStorage.setItem("DidUserScanBool", true);
                 window.location.href = `../ResultPage/Result.html?id=${data.result_id}`;
             }, 1000);
         } else {

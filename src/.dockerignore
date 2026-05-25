@@ -8,3 +8,4 @@ venv
 .env
 *.log
 docker_data.vhdx
+src/Python/stockml-usertable-firebase-Key.json

@@ -1,0 +1,219 @@
+:root {
+    /* Main Theme Colors */
+    --bg-split-dark: #000000;
+    --bg-split-light: #f4f4f4;
+    /* Light gray from reference image */
+    --text-primary: #e0e0e0;
+    --text-on-light: #2c2c2c;
+
+    /* Functional Colors */
+    --accent-blue: #3a8cff;
+    /* Vibe of the chart icon */
+    --input-fill: #1a1a1a;
+    --border-subtle: #333333;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    /* Recommended for this split layout on desktops */
+}
+
+/* 1. The Core Split Layout */
+.split-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* 2. The Form Panel (Dark) */
+.form-panel {
+    flex: 1;
+    /* Takes 50% width */
+    background-color: var(--bg-split-dark);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* Centers form vertically */
+    align-items: center;
+    /* Centers form horizontally */
+    padding: 60px;
+    position: relative;
+}
+
+/* 3. The Image Panel (Light) */
+.image-panel {
+    flex: 1;
+    /* Takes 50% width */
+    background-color: var(--bg-split-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.image-panel img {
+    max-width: 80%;
+    /* Limits size */
+    height: auto;
+    /* Optional: Slight parallax or entry animation */
+}
+
+/* Top Branding Area */
+.top-brand {
+    position: absolute;
+    top: 40px;
+    /* Keeps the padding from the top */
+    left: 40px;
+    /* Keeps the padding from the left */
+    display: flex;
+    align-items: center;
+    /* Vertical alignment for text/logo */
+    gap: 16px;
+    /* Increased gap between logo and text */
+
+    /* NEW: This defines the exact space the entire brand block takes */
+    height: 50px;
+    /* Adjust this number to increase overall size */
+    width: auto;
+    /* Allows the logo block to grow based on its content */
+}
+
+.top-brand img {
+    /* REQUIRED: This forces the image itself to fill the height */
+    height: 180% !important;
+    /* Forces width/height scaling proportion */
+    width: auto;
+    /* Auto width maintains aspect ratio */
+
+    /* NEW: Ensures sharp, high-quality rendering (essential for logos) */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    object-fit: contain;
+    /* Double insurance to maintain ratio */
+}
+
+.top-brand span {
+    /* UPDATED: Scaled the font size slightly for balance */
+    font-size: 1.4rem;
+    /* Marginally larger font */
+    font-weight: 700;
+    /* Keep it bold */
+    color: #fff;
+    /* Ensure visibility on black background */
+    letter-spacing: -0.5px;
+    /* Keeps the text "Mar-Stocks" modern/tight */
+    line-height: 1.1;
+    /* Better vertical text positioning */
+}
+
+/* The Auth Card Content */
+.auth-content {
+    width: 100%;
+    max-width: 380px;
+    /* Constrains form width */
+}
+
+h2 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #fff;
+    letter-spacing: -1px;
+}
+
+.auth-content p.subtitle {
+    color: #888;
+    font-size: 0.95rem;
+    margin-bottom: 40px;
+}
+
+/* Input Fields - Stylized like the Reference */
+.input-group {
+    margin-bottom: 22px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 16px;
+    background: var(--input-fill);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: all 0.2s;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    background: #222;
+}
+
+/* Placeholder Styling */
+::placeholder {
+    color: #555;
+    opacity: 1;
+}
+
+/* The Main Primary Button */
+.btn-main {
+    width: 100%;
+    padding: 16px;
+    background-color: white;
+    /* Button starts white like in the image */
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 20px;
+}
+
+.btn-main:hover {
+    background-color: #e0e0e0;
+}
+
+.btn-main:active {
+    transform: scale(0.98);
+}
+
+/* Toggle Link Text */
+.toggle-text {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 30px;
+}
+
+.toggle-text a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.toggle-text a:hover {
+    text-decoration: underline;
+}
+
+/* Responsiveness - Stack vertically on mobile */
+@media (max-width: 768px) {
+    .split-container {
+        flex-direction: column;
+    }
+
+    .image-panel {
+        display: none;
+        /* Hide image panel on mobile if too complex */
+        /* OR make it small/secondary if you want it to show:
+           order: -1; min-height: 200px;
+        */
+    }
+}

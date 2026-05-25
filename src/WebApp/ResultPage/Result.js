@@ -1,5 +1,27 @@
 //const API_BASE = "https://market-scan-engine.onrender.com";
 const API_BASE = "http://127.0.0.1:8000";
+
+if (!sessionStorage.getItem("username")) {
+    //window.location.href = "../LoginPage/login.html";
+    alert("1");
+}
+else if (!sessionStorage.getItem("DidUserScanBool") || sessionStorage.getItem("DidUserScanBool") === false) {
+    //window.location.href = "../MainPage/index.html";
+    alert("2");
+}
+else if (!localStorage.getItem("resultId")) {
+    //window.location.href = "../MainPage/index.html";
+    alert("3");
+}
+else if (!window.location.search.split("id=")[1] || JSON.stringify(window.location.search.split("id=")[1]) !== localStorage.getItem("resultId")) {
+    // window.location.href = "../MainPage/index.html";
+    alert(`${window.location.search.split("id=")[1]} vs ${localStorage.getItem("resultId")}`);
+    alert("4");
+}
+else {
+    fetchResults();
+}
+
 let sma150Slow = []
 let sma150Fast = []
 let sma200Slow = []
@@ -320,17 +342,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawValue = tickerInput.value.trim();
         if (!rawValue) return alert("Please enter tickers.");
 
+        const checkMLInputValid = (input) => {
+            if (input.length === 0) return false;
+            if (!/^[A-Z]+(,[A-Z]+)*$/.test(input)) return false;
+            const tickers = input.split(',').map(t => t.trim().toUpperCase());
+            const TickerOverLength5 = tickers.some(t => t.length > 5);
+            if (TickerOverLength5) return false;
+            return true;
+        };
+
+        if (!checkMLInputValid(rawValue)) return alert("Invalid input. Please enter only tickers separated by commas, e.g. AAPL, MSFT, GOOGL.");
+
+
+
         const tickerList = rawValue.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
 
         // 1. Enter Loading State
-        mlBtn.innerHTML = `Computing... <span class="state-loading"></span>`;
+        mlBtn.innerHTML = `Running ML Model, Results will be displayed shortly... <span class="state-loading"></span>`;
         mlBtn.style.pointerEvents = "none";
         console.log("Running ML")
+        const UN = sessionStorage.getItem("username")
+
         try {
             const response = await fetch(`${API_BASE}/run-ml-analysis`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tickers: tickerList })
+                body: JSON.stringify({ tickers: tickerList, username: UN })
             });
 
             const data = await response.json();
@@ -392,4 +429,4 @@ function copy200Fast() { copyToClipboard(sma200Fast); }
 function copy20Below() { copyToClipboard(sma20Below); }
 function copy20Above() { copyToClipboard(sma20Above); }
 
-fetchResults();
+
