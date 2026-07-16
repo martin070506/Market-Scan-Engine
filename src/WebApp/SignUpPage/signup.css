@@ -1,219 +1,306 @@
-:root {
-    /* Main Theme Colors */
-    --bg-split-dark: #000000;
-    --bg-split-light: #f4f4f4;
-    /* Light gray from reference image */
-    --text-primary: #e0e0e0;
-    --text-on-light: #2c2c2c;
+/* ============================================================
+   MAR-STOCKS — Create Account
+   Same brand system as the results terminal, with indigo (#3447AA)
+   and blush (#FBEAEB) pushed forward as the dominant pair.
+   ============================================================ */
 
-    /* Functional Colors */
-    --accent-blue: #3a8cff;
-    /* Vibe of the chart icon */
-    --input-fill: #1a1a1a;
-    --border-subtle: #333333;
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;800&display=swap');
+
+:root {
+    --deep: #03363D;
+    --deep-2: #0A4750;
+    --deep-3: #0F5761;
+
+    --sage: #BDD9D7;
+    --blush: #FBEAEB;
+    --indigo: #3447AA;
+    --indigo-light: #5C6FD9;
+    --indigo-deep: #232F73;
+
+    --text-primary: #F6FBFA;
+    --text-secondary: rgba(246, 251, 250, 0.7);
+    --text-dim: rgba(189, 217, 215, 0.5);
+
+    --border-soft: rgba(189, 217, 215, 0.14);
+    --border-strong: rgba(189, 217, 215, 0.28);
+    --border-blush: rgba(251, 234, 235, 0.22);
+
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
 }
 
 body {
     margin: 0;
-    padding: 0;
-    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
     min-height: 100vh;
-    overflow: hidden;
-    /* Recommended for this split layout on desktops */
+    background: var(--deep);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    -webkit-font-smoothing: antialiased;
 }
 
-/* 1. The Core Split Layout */
+::selection {
+    background: var(--indigo);
+    color: var(--blush);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--indigo-light);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+/* ============================================================
+   SPLIT LAYOUT
+   left  = the actual form (real DOM)
+   right = generated decorative panel (::after), no markup needed
+   ============================================================ */
+
 .split-container {
     display: flex;
     min-height: 100vh;
     width: 100%;
 }
 
-/* 2. The Form Panel (Dark) */
+/* ---- LEFT: form panel ---- */
+
 .form-panel {
-    flex: 1;
-    /* Takes 50% width */
-    background-color: var(--bg-split-dark);
-    color: var(--text-primary);
+    flex: 1 1 480px;
+    max-width: 560px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /* Centers form vertically */
-    align-items: center;
-    /* Centers form horizontally */
-    padding: 60px;
+    padding: 48px clamp(28px, 6vw, 84px);
     position: relative;
 }
 
-/* 3. The Image Panel (Light) */
-.image-panel {
-    flex: 1;
-    /* Takes 50% width */
-    background-color: var(--bg-split-light);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-.image-panel img {
-    max-width: 80%;
-    /* Limits size */
-    height: auto;
-    /* Optional: Slight parallax or entry animation */
-}
-
-/* Top Branding Area */
 .top-brand {
     position: absolute;
-    top: 40px;
-    /* Keeps the padding from the top */
-    left: 40px;
-    /* Keeps the padding from the left */
+    top: 36px;
+    left: clamp(28px, 6vw, 84px);
     display: flex;
     align-items: center;
-    /* Vertical alignment for text/logo */
-    gap: 16px;
-    /* Increased gap between logo and text */
-
-    /* NEW: This defines the exact space the entire brand block takes */
-    height: 50px;
-    /* Adjust this number to increase overall size */
-    width: auto;
-    /* Allows the logo block to grow based on its content */
+    gap: 10px;
 }
 
 .top-brand img {
-    /* REQUIRED: This forces the image itself to fill the height */
-    height: 180% !important;
-    /* Forces width/height scaling proportion */
+    height: 26px;
     width: auto;
-    /* Auto width maintains aspect ratio */
-
-    /* NEW: Ensures sharp, high-quality rendering (essential for logos) */
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    object-fit: contain;
-    /* Double insurance to maintain ratio */
+    display: block;
+    filter: brightness(0) invert(1);
+    opacity: 0.92;
 }
 
 .top-brand span {
-    /* UPDATED: Scaled the font size slightly for balance */
-    font-size: 1.4rem;
-    /* Marginally larger font */
-    font-weight: 700;
-    /* Keep it bold */
-    color: #fff;
-    /* Ensure visibility on black background */
-    letter-spacing: -0.5px;
-    /* Keeps the text "Mar-Stocks" modern/tight */
-    line-height: 1.1;
-    /* Better vertical text positioning */
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    color: var(--blush);
 }
 
-/* The Auth Card Content */
 .auth-content {
     width: 100%;
     max-width: 380px;
-    /* Constrains form width */
 }
 
-h2 {
-    font-size: 2.2rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #fff;
-    letter-spacing: -1px;
+.auth-content h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.7rem, 3vw, 2.1rem);
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    color: var(--blush);
 }
 
-.auth-content p.subtitle {
-    color: #888;
-    font-size: 0.95rem;
-    margin-bottom: 40px;
+.subtitle {
+    margin: 0 0 32px;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
 
-/* Input Fields - Stylized like the Reference */
+/* ---- inputs ---- */
+
+#signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
 .input-group {
-    margin-bottom: 22px;
+    position: relative;
 }
 
 .input-group input {
     width: 100%;
-    padding: 16px;
-    background: var(--input-fill);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    color: white;
-    font-size: 1rem;
-    box-sizing: border-box;
-    transition: all 0.2s;
+    padding: 14px 16px;
+    background: rgba(3, 20, 23, 0.55);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.input-group input::placeholder {
+    color: var(--text-dim);
+}
+
+.input-group input:hover {
+    border-color: var(--border-blush);
 }
 
 .input-group input:focus {
     outline: none;
-    border-color: var(--accent-blue);
-    background: #222;
+    border-color: var(--indigo-light);
+    background: rgba(3, 20, 23, 0.75);
+    box-shadow: 0 0 0 3px rgba(52, 71, 170, 0.28);
 }
 
-/* Placeholder Styling */
-::placeholder {
-    color: #555;
-    opacity: 1;
+.input-group input:invalid:not(:placeholder-shown) {
+    border-color: rgba(226, 134, 123, 0.6);
 }
 
-/* The Main Primary Button */
+/* ---- button ---- */
+
 .btn-main {
+    margin-top: 8px;
     width: 100%;
-    padding: 16px;
-    background-color: white;
-    /* Button starts white like in the image */
-    color: #000;
+    padding: 14px 20px;
     border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 1rem;
+    border-radius: var(--radius-md);
+    background: linear-gradient(120deg, var(--indigo), var(--indigo-light));
+    color: var(--blush);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.94rem;
+    letter-spacing: 0.01em;
     cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 20px;
+    box-shadow: 0 14px 28px -12px rgba(52, 71, 170, 0.7);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
 }
 
 .btn-main:hover {
-    background-color: #e0e0e0;
+    transform: translateY(-1px);
+    box-shadow: 0 18px 34px -12px rgba(52, 71, 170, 0.85);
+    filter: brightness(1.05);
 }
 
 .btn-main:active {
-    transform: scale(0.98);
+    transform: translateY(0);
 }
 
-/* Toggle Link Text */
+/* ---- footer link ---- */
+
 .toggle-text {
+    margin: 22px 0 0;
+    font-size: 0.82rem;
+    color: var(--text-dim);
     text-align: center;
-    font-size: 0.9rem;
-    color: #888;
-    margin-top: 30px;
 }
 
 .toggle-text a {
-    color: #fff;
+    color: var(--blush);
     text-decoration: none;
     font-weight: 600;
+    border-bottom: 1px solid rgba(251, 234, 235, 0.35);
+    transition: border-color 0.15s ease, color 0.15s ease;
 }
 
 .toggle-text a:hover {
-    text-decoration: underline;
+    color: var(--indigo-light);
+    border-color: var(--indigo-light);
 }
 
-/* Responsiveness - Stack vertically on mobile */
-@media (max-width: 768px) {
-    .split-container {
-        flex-direction: column;
+/* ============================================================
+   RIGHT PANEL — generated, no extra markup required
+   Signature: a rising "chart sweep" made of pure gradients —
+   evokes the upward scan a new member is about to join.
+   ============================================================ */
+
+.split-container::after {
+    content: "// MAR-STOCKS — ML TERMINAL";
+    flex: 1 1 50%;
+    display: flex;
+    align-items: flex-end;
+    padding: 48px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: rgba(251, 234, 235, 0.55);
+    background:
+        linear-gradient(115deg, transparent 40%, rgba(251, 234, 235, 0.07) 50%, transparent 60%),
+        repeating-linear-gradient(100deg,
+            rgba(251, 234, 235, 0.05) 0px,
+            rgba(251, 234, 235, 0.05) 2px,
+            transparent 2px,
+            transparent 46px),
+        linear-gradient(200deg, var(--indigo) 0%, var(--indigo-deep) 55%, var(--deep) 100%);
+    background-size: 220% 220%, auto, auto;
+    background-position: 0% 100%, 0 0, 0 0;
+    animation: rise-sweep 7s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes rise-sweep {
+    0% {
+        background-position: 0% 100%, 0 0, 0 0;
     }
 
-    .image-panel {
+    50% {
+        background-position: 100% 0%, 0 0, 0 0;
+    }
+
+    100% {
+        background-position: 0% 100%, 0 0, 0 0;
+    }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .split-container::after {
         display: none;
-        /* Hide image panel on mobile if too complex */
-        /* OR make it small/secondary if you want it to show:
-           order: -1; min-height: 200px;
-        */
+    }
+
+    .form-panel {
+        max-width: 100%;
+        flex: 1 1 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-panel {
+        padding: 100px 24px 40px;
     }
 }

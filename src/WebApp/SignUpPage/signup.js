@@ -1,27 +1,7 @@
 // Import the Firebase SDKs from a CDN
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-const firebaseConfig = {
-    apiKey: "AIzaSyCdYNOZDTnVdq3lgJ2k6-FfizS-vxYQkpY", //this key is safe to expose as it only allows authentication and has no admin privileges
-    authDomain: "stockml-usertable.firebaseapp.com",
-    databaseURL: "https://stockml-usertable-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "stockml-usertable",
-    storageBucket: "stockml-usertable.firebasestorage.app",
-    messagingSenderId: "216365895860",
-    appId: "1:216365895860:web:89abe0e1b4d8350edb07e1",
-    measurementId: "G-17CVM7SCHB"
-};
+import { auth, API_BASE } from "../../env_Files/firebase.js";
 
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth(app);
 
-export { auth };
-
-const makeSession = async (username) => {
-    sessionStorage.setItem("username", username);
-}
 
 
 document.addEventListener("DOMContentLoaded", () => {

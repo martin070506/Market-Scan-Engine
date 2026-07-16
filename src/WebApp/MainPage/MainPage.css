@@ -1,17 +1,44 @@
 :root {
-    --bg-dark: #0a0a0b;
-    --card-bg: #111113;
-    --border-color: #26262b;
-    --accent-green: #00ff41;
-    --accent-red: #ff3131;
-    --accent-yellow: #f59e0b;
-    /* Professional warning yellow */
-    --text-main: #e4e4e7;
-    --text-dim: #71717a;
+    /* --- Core Palette --- */
+    --color-indigo: #3447AA;
+    --color-indigo-dark: #263480;
+    --color-indigo-light: #5567C4;
+    --color-blush: #FBEAEB;
+    --color-sage: #BDD9D7;
+    --color-sage-dark: #9BC0BD;
+
+    /* --- Derived tones (kept within the family, for readability & depth) --- */
+    --bg-canvas: var(--color-blush);
+    --bg-surface: #ffffff;
+    --bg-surface-alt: #F6F2ED;
+    /* subtle warm neutral for section breaks */
+    --border-color: #E3D3D2;
+    --border-strong: var(--color-sage-dark);
+
+    --text-main: #2B2E4A;
+    /* deep indigo-ink, not pure black — softer, more elegant */
+    --text-dim: #6E7396;
+    --text-on-indigo: #FBEAEB;
+
+    /* --- Semantic accents (muted, drawn from the same family) --- */
+    --accent-success: #4C8C7A;
+    /* muted sage-green */
+    --accent-warning: #B98545;
+    /* muted amber, desaturated to sit with the palette */
+    --accent-alert: #B4555A;
+    /* muted rose/brick, not neon red */
+
+    --font-display: 'Fraunces', 'Georgia', serif;
+    --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+
     --max-width: 1200px;
-    --micro-radius: 4px;
-    /* Defined professional radius */
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+
+    --shadow-soft: 0 4px 24px rgba(52, 71, 170, 0.08);
+    --shadow-lift: 0 12px 40px rgba(52, 71, 170, 0.14);
 }
 
 * {
@@ -19,11 +46,11 @@
 }
 
 body {
-    background-color: var(--bg-dark);
+    background-color: var(--bg-canvas);
     color: var(--text-main);
-    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    font-family: var(--font-body);
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.6;
     overflow-x: hidden;
     /* Prevent horizontal scroll from entry animation */
 }
@@ -65,7 +92,7 @@ body {
 header {
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 0;
-    background: rgba(10, 10, 11, 0.8);
+    background: rgba(251, 234, 235, 0.85);
     backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
@@ -83,12 +110,16 @@ header {
     align-items: center;
     gap: 10px;
     font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--text-main);
 }
 
 .logo-mark {
     width: 12px;
     height: 12px;
-    background: var(--accent-green);
+    background: var(--color-indigo);
+    border-radius: 3px;
 }
 
 .nav-links {
@@ -101,11 +132,12 @@ header {
     color: var(--text-dim);
     text-decoration: none;
     font-size: 0.9rem;
+    font-weight: 500;
     transition: color 0.2s;
 }
 
 .nav-links a:hover {
-    color: var(--text-main);
+    color: var(--color-indigo);
 }
 
 /* --- Hero Section --- */
@@ -124,34 +156,38 @@ header {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #1a1a1c;
-    padding: 4px 12px;
-    border-radius: 2px;
+    background: var(--bg-surface);
+    padding: 5px 14px;
+    border-radius: 999px;
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--accent-yellow);
-    /* Updated status to Yellow */
+    letter-spacing: 0.03em;
+    color: var(--accent-warning);
     margin-bottom: 1.5rem;
     border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
 }
 
 .pulse-dot {
     width: 6px;
     height: 6px;
-    background: var(--accent-yellow);
+    background: var(--accent-warning);
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--accent-yellow);
+    box-shadow: 0 0 8px var(--accent-warning);
 }
 
 .hero-title {
-    font-size: 3.5rem;
-    line-height: 1.1;
+    font-family: var(--font-display);
+    font-size: 3.6rem;
+    line-height: 1.12;
     margin: 0 0 1.5rem 0;
-    font-weight: 800;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
 }
 
 .text-gradient {
-    color: var(--accent-green);
+    color: var(--color-indigo);
 }
 
 .hero-subtitle {
@@ -161,12 +197,13 @@ header {
     margin-bottom: 2.5rem;
 }
 
-/* --- Terminal Card --- */
+/* --- Terminal / Data Card --- */
 .glass-card {
-    background: var(--card-bg);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     padding: 2rem;
-    border-radius: var(--micro-radius);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
 }
 
 .card-header {
@@ -187,12 +224,15 @@ header {
     color: var(--text-dim);
     font-size: 0.8rem;
     margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .stat-item .value {
     font-family: var(--font-mono);
-    font-size: 2.5rem;
+    font-size: 2.4rem;
     font-weight: 500;
+    color: var(--color-indigo);
 }
 
 .mini-chart {
@@ -204,31 +244,32 @@ header {
 
 .bar {
     flex: 1;
-    background: var(--accent-green);
-    opacity: 0.7;
+    background: var(--color-indigo);
+    opacity: 0.75;
+    border-radius: 2px 2px 0 0;
 }
 
 /* Mixed bars for financial chart look */
 .mini-chart .bar:nth-child(2),
 .mini-chart .bar:nth-child(4) {
-    background: var(--accent-red);
+    background: var(--accent-alert);
 }
 
-/* --- Red Warning Section --- */
+/* --- Alert / Status Section --- */
 .status-alert {
-    border: 1px solid var(--accent-red);
-    color: var(--accent-red);
-    background: rgba(255, 49, 49, 0.1);
-    padding: 0.5rem 1rem;
+    border: 1px solid var(--accent-alert);
+    color: var(--accent-alert);
+    background: rgba(180, 85, 90, 0.08);
+    padding: 0.6rem 1.1rem;
     font-family: var(--font-mono);
     font-size: 11px;
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
 }
 
 /* --- Instructions Section --- */
 .instructions-section {
     padding: 100px 0;
-    background: #0d0d0f;
+    background: var(--bg-surface-alt);
     border-top: 1px solid var(--border-color);
 }
 
@@ -239,36 +280,52 @@ header {
 }
 
 .instruction-card {
-    background: var(--card-bg);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     padding: 2rem;
-    border-radius: var(--micro-radius);
+    border-radius: var(--radius-md);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.instruction-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
 }
 
 .card-num {
     font-family: var(--font-mono);
-    color: var(--accent-yellow);
-    font-size: 2.5rem;
+    color: var(--color-indigo);
+    font-size: 2.2rem;
     margin-bottom: 1rem;
+    opacity: 0.5;
 }
 
 .card-title {
+    font-family: var(--font-display);
     color: var(--text-main);
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     margin: 0 0 1rem;
+    font-weight: 600;
 }
 
 .card-body {
     color: var(--text-dim);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 }
 
 .instruction-card.ml {
     grid-column: span 3;
-    border: 1px solid var(--accent-green);
+    border: 1px solid var(--color-sage-dark);
+    background: var(--color-sage);
     display: flex;
     align-items: center;
     gap: 2rem;
+}
+
+.instruction-card.ml .card-title,
+.instruction-card.ml .card-num {
+    color: var(--text-main);
+    opacity: 1;
 }
 
 /* --- Upload Section --- */
@@ -278,47 +335,57 @@ header {
 }
 
 .drop-zone {
-    border: 1px dashed var(--border-color);
-    background: #0d0d0f;
+    border: 1.5px dashed var(--border-strong);
+    background: var(--bg-surface);
     padding: 4rem 2rem;
     text-align: center;
-    border-radius: var(--micro-radius);
-    transition: all 0.2s;
+    border-radius: var(--radius-lg);
+    transition: all 0.25s ease;
 }
 
 .drop-zone:hover {
-    border-color: var(--accent-green);
-    background: #111113;
+    border-color: var(--color-indigo);
+    background: var(--bg-surface-alt);
 }
 
 .btn-primary {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: var(--accent-green);
-    color: #000;
+    background: var(--color-indigo);
+    color: var(--text-on-indigo);
     padding: 1rem 2rem;
     text-decoration: none;
     font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.9rem;
-    border-radius: var(--micro-radius);
-    transition: transform 0.1s, box-shadow 0.1s;
+    letter-spacing: 0.03em;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 255, 65, 0.3);
+    background: var(--color-indigo-dark);
+    box-shadow: 0 8px 24px rgba(52, 71, 170, 0.28);
 }
 
 .btn-secondary {
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-strong);
     color: var(--text-main);
     padding: 0.8rem 1.5rem;
     cursor: pointer;
     font-family: var(--font-mono);
-    border-radius: var(--micro-radius);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-secondary:hover {
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
 }
 
 footer {
@@ -328,39 +395,51 @@ footer {
     font-size: 10px;
     color: var(--text-dim);
     letter-spacing: 2px;
+    border-top: 1px solid var(--border-color);
 }
 
+/* --- Signature element: glowing session name, recolored to the new palette --- */
 #User-Session-Name {
-    font-size: 0.8rem;
-
-    /* 1. Name the animation, set duration to 3 seconds, and make it repeat infinitely */
+    font-size: 0.85rem;
+    font-weight: 600;
     animation: colorFade 5s ease-in-out infinite;
 }
 
-/* 2. Define the fade steps */
 @keyframes colorFade {
     0% {
-        color: #ff4d4d;
-
+        color: var(--color-indigo);
     }
 
     25% {
-        color: #d6e233;
-
+        color: var(--color-sage-dark);
     }
 
     50% {
-        color: #4aff80;
-
+        color: var(--color-indigo-light);
     }
 
     75% {
-        color: #d6e233;
-
+        color: var(--color-sage-dark);
     }
 
     100% {
-        color: #ff4d4d;
-
+        color: var(--color-indigo);
     }
+}
+
+.btn-logout {
+    background: var(--accent-alert);
+    color: #fff;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    border-radius: var(--radius-sm);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+.btn-logout:hover {
+    transform: translateY(-1px);
+    background: #9E474C;
+    box-shadow: 0 6px 18px rgba(180, 85, 90, 0.25);
 }

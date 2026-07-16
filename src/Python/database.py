@@ -1,20 +1,26 @@
 import math
 import uuid
-
+import json
 import firebase_admin
 import os;
 from firebase_admin import credentials
 from firebase_admin import db
-current_dir = os.path.dirname(os.path.abspath(__file__))
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+current_dir = os.path.join(current_dir, "..", "env_Files")
 # 2. Join that directory path with your JSON file name
 json_path = os.path.join(current_dir, "stockml-usertable-firebase-Key.json")
 
-# 3. Pass the bulletproof absolute path to your credentials
+
+with open(os.path.join(current_dir, "firebase_url.json"), 'r') as f:
+    firebase_url_data = json.load(f)
+    database_url = firebase_url_data.get("url")
+
+
 cred = credentials.Certificate(json_path)
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://stockml-usertable-default-rtdb.europe-west1.firebasedatabase.app'
+        'databaseURL': database_url
     })
 
 

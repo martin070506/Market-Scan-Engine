@@ -19,7 +19,6 @@
         <div class="logo">SS</div>
         <h1>Stock Scan Results</h1>
         <div id="global-status" class="loading">
-            <span class="dot"></span>
             <span id="status-text">Fetching data…</span>
         </div>
         <div class="scan-id" id="scan-id-display">—</div>
@@ -33,7 +32,7 @@
 
             <div class="card theme-cyan" id="card-cup-handle">
                 <div class="card-header">
-                    <div class="card-icon">☕</div>
+
                     <div class="card-title">Cup &amp; Handle</div>
                     <div class="card-badge" id="badge-cup-handle">…</div>
                 </div>
@@ -44,7 +43,7 @@
 
             <div class="card theme-green" id="card-double-bottom">
                 <div class="card-header">
-                    <div class="card-icon">⌣</div>
+
                     <div class="card-title">Double Bottom</div>
                     <div class="card-badge" id="badge-double-bottom">…</div>
                 </div>
@@ -61,7 +60,7 @@
 
             <div class="card theme-orange" id="card-150-slow">
                 <div class="card-header">
-                    <div class="card-icon">📉</div>
+
                     <div class="card-title">150 MA — Slow ATR</div>
                     <button class="copy-stocks-badge" id="badge-150-slowBtn" onclick="copy150Slow()">CTRL + C</button>
                     <div class="card-badge" id="badge-150-slow">…</div>
@@ -73,7 +72,7 @@
 
             <div class="card theme-orange" id="card-150-3atr">
                 <div class="card-header">
-                    <div class="card-icon">🔥</div>
+
                     <div class="card-title">150 MA — 3+ ATR</div>
                     <button class="copy-stocks-badge" id="badge-150-fast" onclick="copy150Fast()">CTRL + C</button>
                     <div class="card-badge" id="badge-150-3atr">…</div>
@@ -91,7 +90,7 @@
 
             <div class="card theme-purple" id="card-200-slow">
                 <div class="card-header">
-                    <div class="card-icon">📉</div>
+
                     <div class="card-title">200 MA — Slow ATR</div>
                     <button class="copy-stocks-badge" id="badge-200-slowBtn" onclick="copy200Slow()">CTRL + C</button>
                     <div class="card-badge" id="badge-200-slow">…</div>
@@ -103,7 +102,7 @@
 
             <div class="card theme-purple" id="card-200-3atr">
                 <div class="card-header">
-                    <div class="card-icon">🔥</div>
+
                     <div class="card-title">200 MA — 3+ ATR</div>
                     <button class="copy-stocks-badge" id="badge-200-fast" onclick="copy200Fast()">CTRL + C</button>
                     <div class="card-badge" id="badge-200-3atr">…</div>
@@ -121,7 +120,7 @@
 
             <div class="card theme-gold" id="card-min-pivots">
                 <div class="card-header">
-                    <div class="card-icon">▽</div>
+
                     <div class="card-title">Min Pivots Ready for Entry</div>
                     <div class="card-badge" id="badge-min-pivots">…</div>
                 </div>
@@ -132,7 +131,7 @@
 
             <div class="card theme-gold" id="card-max-pivots">
                 <div class="card-header">
-                    <div class="card-icon">△</div>
+
                     <div class="card-title">Max Pivots Ready for Entry</div>
                     <div class="card-badge" id="badge-max-pivots">…</div>
                 </div>
@@ -177,9 +176,9 @@
         <div class="ml-container reveal">
             <div class="glass-card ml-card">
                 <div class="card-header">
-                    <div class="card-icon">🧠</div>
+
                     <div class="card-title">SMA Deviation Analysis</div>
-                    <div class="tag-green">ML MODEL V2.4</div>
+                    <div class="tag-green">ML MODEL V2.6.2 (BETA) still trying to optimize best parameters</div>
                 </div>
 
                 <div class="ml-description">
@@ -212,7 +211,7 @@
 
     </div><!-- /page -->
 
-    <script src="Result.js"></script>
+    <script type="module" src="Result.js"></script>
 
 </body>
 

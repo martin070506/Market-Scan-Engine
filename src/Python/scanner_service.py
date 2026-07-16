@@ -116,16 +116,111 @@ def load_local_model():
     """Fetches stats from Realtime Database."""
     return db.reference("model_stats").get()
 
+def apply_indicators(df):
+    """
+    Calculates the features required for the new high-accuracy ML model layout.
+    """
+    # 1. Ironclad Column Flattening
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    df.columns = [str(col).strip() for col in df.columns]
 
+    # Ensure download was successful
+    required = ['Open', 'High', 'Low', 'Close', 'Volume']
+    if not all(col in df.columns for col in required):
+        return None
+
+    # 2. EXTRAW RAW SERIES
+    close = df['Close'].squeeze()
+    high = df['High'].squeeze()
+    low = df['Low'].squeeze()
+    vol = df['Volume'].squeeze()
+    
+    # 3. BASE CALCS
+    atr = ta.atr(high, low, close, 14) + 0.0001
+    sma20 = ta.sma(close, 20)
+    sma100 = ta.sma(close, 100)
+    
+    # 4. TARGET LOGIC (5-Day Mean Reversion to SMA20)
+    df['Target'] = 0
+    for i in range(len(df) - 5):
+        future_highs = high.iloc[i+1 : i+6]
+        future_smas = sma20.iloc[i+1 : i+6]
+        if (future_highs >= future_smas).any():
+            df.at[df.index[i], 'Target'] = 1
+
+    # 5. NEW HIGH-ACCURACY FEATURE ENGINEERING
+    df['stretch_sma20'] = (sma20 - close) / atr
+    df['stretch_sma100'] = (sma100 - close) / atr
+
+    # Oscillators (RSI Slope 3)
+    rsi_14 = ta.rsi(close, 14) / 100.0
+    df['rsi_slope_3'] = rsi_14.diff(3)
+
+    # Volatility Structures (BB %B)
+    bb20 = ta.bbands(close, length=20)
+    if bb20 is not None:
+        df['bb_pct_b'] = (close - bb20.iloc[:, 0]) / (bb20.iloc[:, 2] - bb20.iloc[:, 0] + 0.0001)
+    else:
+        df['bb_pct_b'] = 0.5
+    
+    # Momentum Vectors
+    df['roc_5'] = close.pct_change(5)
+    df['roc_10'] = close.pct_change(10)
+    df['roc_20'] = close.pct_change(20)
+
+    # Rolling Extremes Multi-Period Distances
+    df['dist_from_high_20'] = (high.rolling(20).max() - close) / atr
+
+    # Volume Profiling
+    df['volume_ratio_5'] = vol / (ta.sma(vol, 5) + 0.0001)
+    df['cmf_20'] = ta.cmf(high, low, close, vol, length=20).fillna(0)
+
+    # 6. FILTER: ONLY TEACH THE MODEL ABOUT "STRETCHED" DAYS
+    df['stretch_filter'] = (sma20 - close) / atr
+    df = df[df['stretch_filter'] > 0.5].drop(columns=['stretch_filter']).copy()
+
+    # 7. SELECT FINAL FEATURE COLUMNS (The Top 10 Best Accuracy List)
+    features = [
+        'stretch_sma20', 'roc_5', 'roc_10', 'roc_20', 'bb_pct_b', 
+        'volume_ratio_5', 'cmf_20', 'rsi_slope_3', 'stretch_sma100', 'dist_from_high_20'
+    ]
+    
+    return df[features + ['Target']].dropna()
 
 def scan_stock(ticker, model, feature_cols):
     """Single stock prediction using local model."""
     df = yf.download(ticker, period="200d", progress=False)
-    df = apply_indicators(df)
-    current_setup = df[feature_cols].tail(1)
     
-    if current_setup.isnull().values.any(): return None
-    model_Prob_Result=model.predict_proba(current_setup)[0][1]
+    if df.empty:
+        return None
+        
+    # 1. Flatten yfinance MultiIndex headers immediately if they exist
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    df.columns = [str(col).strip() for col in df.columns]
+    
+    # 2. CRITICAL CHANGE: Use the exact training feature engine instead of apply_indicators
+    # This guarantees 'stretch_sma20', 'roc_5', etc., actually get calculated!
+    df = apply_indicators(df)
+    
+    if df is None or df.empty:
+        return None
+        
+    # 3. Clean headers again post-calculation to ensure perfect matching
+    df.columns = [str(col).strip() for col in df.columns]
+    
+    try:
+        # Extract only the 10 top accuracy features loaded from your joblib payload
+        current_setup = df[feature_cols].tail(1)
+    except KeyError as e:
+        print(f"💥 Missing expected ML feature in live data for {ticker}: {e}")
+        return None
+    
+    if current_setup.isnull().values.any(): 
+        return None
+        
+    model_Prob_Result = model.predict_proba(current_setup)[0][1]
     database.upload_ML_Prob_To_Firebase(GlobalUserName_Var, ticker, model_Prob_Result)
     return model_Prob_Result
 
@@ -220,73 +315,3 @@ def train_and_save_locally(ticker_list):
     return model
 
 
-def apply_indicators(df):
-    """
-    Cleans MultiIndex columns, calculates Target (Mean Reversion), 
-    and returns ONLY normalized features.
-    """
-    # 1. FIX THE 'HIGH' ERROR (Ironclad Column Flattening)
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-    df.columns = [str(col).strip() for col in df.columns]
-
-    # Ensure download was successful
-    required = ['Open', 'High', 'Low', 'Close', 'Volume']
-    if not all(col in df.columns for col in required):
-        return None
-
-    # 2. EXTRACT RAW SERIES
-    close = df['Close'].squeeze()
-    high = df['High'].squeeze()
-    low = df['Low'].squeeze()
-    vol = df['Volume'].squeeze()
-    
-    # 3. BASE CALCS (Used for features and targets)
-    sma20 = ta.sma(close, 20)
-    sma50 = ta.sma(close, 50)
-    sma150 = ta.sma(close, 150)
-    atr = ta.atr(high, low, close, 14)
-    rsi = ta.rsi(close, 14)
-
-    # 4. TARGET LOGIC (5-Day Mean Reversion to SMA20)
-    # Target 1 = Success (Price hit SMA20 within 5 days)
-    df['Target'] = 0
-    for i in range(len(df) - 5):
-        future_highs = high.iloc[i+1 : i+6]
-        future_smas = sma20.iloc[i+1 : i+6]
-        if (future_highs >= future_smas).any():
-            df.at[df.index[i], 'Target'] = 1
-
-    # 5. NORMALIZED FEATURE ENGINEERING
-    # We use (ATR + 0.0001) to avoid dividing by zero
-    df['stretch'] = (sma20 - close) / (atr + 0.0001)
-    df['SMA50_STRETCH'] = (sma50 - close) / (atr + 0.0001)
-    df['SMA150_STRETCH'] = (sma150 - close) / (atr + 0.0001)
-    df['volume_ratio'] = vol / (vol.rolling(20).mean() + 0.0001)
-    df['RSI_Norm'] = rsi / 100.0  
-    df['ROC'] = close.pct_change(5)
-    df['CCI_Norm'] = ta.cci(high, low, close, 14) / 100.0 
-    
-    bb = ta.bbands(close, length=20)
-    if bb is not None:
-        df['BB_Width'] = (bb.iloc[:, 2] - bb.iloc[:, 0]) / (sma20 + 0.0001)
-    
-    df['Closed_At_Range'] = (close - low) / (high - low + 0.0001)
-    df['RSI_Slope'] = df['RSI_Norm'].diff(3)
-    df['ATR_Ratio'] = atr / (atr.rolling(20).mean() + 0.0001)
-    df['Vol_Shock'] = (vol - vol.rolling(20).mean()) / (vol.rolling(20).std() + 0.0001)
-    df['Price_Speed'] = df['ROC'].diff(2)
-    df['Dist_From_Low'] = (close - low.rolling(5).min()) / (atr + 0.0001)
-
-    # 6. FILTER: ONLY TEACH THE MODEL ABOUT "STRETCHED" DAYS
-    # We only care about setups where price is > 0.5 ATR below SMA20
-    df = df[df['stretch'] > 0.5].copy()
-
-    # 7. SELECT FINAL FEATURE COLUMNS
-    features = [
-        'stretch', 'SMA50_STRETCH', 'SMA150_STRETCH', 'volume_ratio', 
-        'RSI_Norm', 'ROC', 'CCI_Norm', 'BB_Width', 'Closed_At_Range', 
-        'RSI_Slope', 'ATR_Ratio', 'Vol_Shock', 'Price_Speed', 'Dist_From_Low'
-    ]
-    
-    return df[features + ['Target']].dropna()

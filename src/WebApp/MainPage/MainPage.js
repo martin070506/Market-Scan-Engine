@@ -1,11 +1,39 @@
+import { auth, API_BASE } from "../../env_Files/firebase.js";
 
-//const API_BASE = window.CONFIG.API_BASE;
-//const API_BASE = "https://market-scan-engine.onrender.com";
+auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        // No user is signed in, redirect to login
+        window.location.href = "../LoginPage/login.html";
+    } else {
+        // User is logged in! Update UI safely
+        const sessionNameEl = document.getElementById("User-Session-Name");
+        if (sessionNameEl) {
+            sessionNameEl.textContent = `User: ${user.email}`;
+        }
+        else {
+            console.error("User-Session-Name element not found in the DOM.");
+        }
 
-if (!sessionStorage.getItem("username")) {
-    // If no username in session, redirect to login page
-    window.location.href = "../LoginPage/login.html";
+
+    }
+});
+
+async function logout() {
+    try {
+        await auth.signOut();
+        // Clear application state flags safely
+        sessionStorage.removeItem("username");
+        sessionStorage.removeItem("DidUserScanBool");
+        localStorage.removeItem("resultId");
+
+        // Redirect to login page
+        window.location.href = "../LoginPage/login.html";
+    } catch (error) {
+        console.error("Error signing out:", error);
+        alert("Failed to log out. Please try again.");
+    }
 }
+
 const username = sessionStorage.getItem("username");
 sessionStorage.removeItem("DidUserScanBool"); // Clear this flag on main page load
 const sessionNameEl = document.getElementById("User-Session-Name");
@@ -14,8 +42,7 @@ if (sessionNameEl) {
 }
 
 // 1. CONFIGURATION
-// Switch this to your Back4App URL when deploying
-const API_BASE = "http://127.0.0.1:8000";
+
 
 // 2. UI ELEMENTS
 const dropZone = document.getElementById("drop-zone");
@@ -23,6 +50,11 @@ const fileInput = document.getElementById("file-input");
 const browseBtn = document.getElementById("browse-btn");
 const statusEl = document.getElementById("upload-status");
 const revealElements = document.querySelectorAll(".reveal");
+
+const logoutBtn = document.getElementById("logout-btn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", logout);
+}
 
 // 3. REVEAL ANIMATION (Intersection Observer)
 const revealObserver = new IntersectionObserver((entries) => {
@@ -39,22 +71,23 @@ revealElements.forEach((el) => revealObserver.observe(el));
 // 4. HELPERS
 function setStatus(message, type = "info") {
     if (!statusEl) return;
-    statusEl.style.display = "block"; // Ensure it's visible
-
+    statusEl.style.display = "block";
 
     let className = "status-loading";
+    if (type === "error") className = "status-error";
+    else if (type === "success") className = "status-success";
 
-    if (type === "error") {
-        className = "status-error";
-    } else if (type === "success") {
-        className = "status-success";
-    }
+    // 1. Clean out the old HTML content completely
+    statusEl.replaceChildren();
 
-    statusEl.innerHTML = `
-        <div class="status-wrapper ${className}">
-             ${message}
-        </div>
-    `;
+    // 2. Build the structural elements programmatically
+    const wrapper = document.createElement("div");
+    wrapper.className = `status-wrapper ${className}`;
+
+    // 3. SECURE: textContent safely escapes raw text, preventing XSS
+    wrapper.textContent = message;
+
+    statusEl.appendChild(wrapper);
 }
 
 function isCsvFile(file) {

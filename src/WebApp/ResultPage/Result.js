@@ -1,26 +1,22 @@
 //const API_BASE = "https://market-scan-engine.onrender.com";
-const API_BASE = "http://127.0.0.1:8000";
+import { auth, API_BASE } from "../../env_Files/firebase.js";
 
-if (!sessionStorage.getItem("username")) {
-    //window.location.href = "../LoginPage/login.html";
-    alert("1");
-}
-else if (!sessionStorage.getItem("DidUserScanBool") || sessionStorage.getItem("DidUserScanBool") === false) {
-    //window.location.href = "../MainPage/index.html";
-    alert("2");
-}
-else if (!localStorage.getItem("resultId")) {
-    //window.location.href = "../MainPage/index.html";
-    alert("3");
-}
-else if (!window.location.search.split("id=")[1] || JSON.stringify(window.location.search.split("id=")[1]) !== localStorage.getItem("resultId")) {
-    // window.location.href = "../MainPage/index.html";
-    alert(`${window.location.search.split("id=")[1]} vs ${localStorage.getItem("resultId")}`);
-    alert("4");
-}
-else {
-    fetchResults();
-}
+auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        // No user is signed in, redirect to login
+        window.location.href = "../LoginPage/login.html";
+    } else {
+        // User is logged in! Update UI safely
+        const sessionNameEl = document.getElementById("User-Session-Name");
+        if (sessionNameEl) {
+            sessionNameEl.textContent = `User: ${user.email}`;
+        }
+
+        await fetchResults();
+    }
+});
+
+
 
 let sma150Slow = []
 let sma150Fast = []
@@ -310,24 +306,47 @@ async function fetchResults() {
 
 function filterPairsStockStatus(listOfPairs) {
     let resultList = []
-    for (pair of listOfPairs) {
+    for (let pair of listOfPairs) {
         resultList.push(pair[0])
     }
     return resultList
-
 }
 
 function copyToClipboard(list) {
-    if (list.length === 0) {
+    if (!list || list.length === 0) {
         console.warn("List is empty, nothing to copy.");
         return;
     }
 
-    // .join(",") turns ['A', 'B'] into "A,B"
-    const textToCopy = list.join(",");
+    // 1. Force the entire input structure into one giant raw string text wall
+    // This catches flat arrays, nested arrays, objects, and pre-joined strings perfectly
+    const rawStringText = String(list);
+
+    // 2. Split that text wall by every comma to isolate individual chunks
+    const cleanList = rawStringText
+        .split(',')
+        .map(item => item.trim()) // Strip out sneaky extra whitespaces
+        .filter(item => {
+            const upperItem = item.toUpperCase();
+            return (
+                upperItem !== "BELOW" &&
+                upperItem !== "ABOVE" &&
+                upperItem !== "UNDEFINED" &&
+                upperItem !== "NULL" &&
+                upperItem !== ""
+            );
+        });
+
+    if (cleanList.length === 0) {
+        console.warn("No valid stock tickers left after processing.");
+        return;
+    }
+
+    // 3. Stitched back together smoothly with single commas
+    const textToCopy = cleanList.join(",");
 
     navigator.clipboard.writeText(textToCopy).then(() => {
-        console.log("Copied to clipboard: " + textToCopy);
+        console.log("Copied 100% clean tickers to clipboard: " + textToCopy);
     }).catch(err => {
         console.error("Failed to copy: ", err);
     });
@@ -336,53 +355,77 @@ function copyToClipboard(list) {
 document.addEventListener('DOMContentLoaded', () => {
     const mlBtn = document.getElementById('run-ml-model');
     const tickerInput = document.getElementById('ticker-input');
-    const mlContainer = document.querySelector('.ml-container');
+
+    if (!mlBtn) return;
 
     mlBtn.addEventListener('click', async () => {
         const rawValue = tickerInput.value.trim();
         if (!rawValue) return alert("Please enter tickers.");
 
+        // Clean validation check
         const checkMLInputValid = (input) => {
             if (input.length === 0) return false;
-            if (!/^[A-Z]+(,[A-Z]+)*$/.test(input)) return false;
-            const tickers = input.split(',').map(t => t.trim().toUpperCase());
-            const TickerOverLength5 = tickers.some(t => t.length > 5);
-            if (TickerOverLength5) return false;
+            if (!/^[A-Z\s]+(,[A-Z\s]+)*$/i.test(input)) return false; // Allowed spaces, case-insensitive check
             return true;
         };
 
-        if (!checkMLInputValid(rawValue)) return alert("Invalid input. Please enter only tickers separated by commas, e.g. AAPL, MSFT, GOOGL.");
+        if (!checkMLInputValid(rawValue)) {
+            return alert("Invalid input. Format should be tickers separated by commas, e.g. AAPL, MSFT, GOOGL.");
+        }
 
+        // Parse and aggressively filter out any empty strings or spaces
+        const tickerList = rawValue
+            .replace(/[\u200B-\u200D\uFEFF]/g, "") // Deletes any invisible zero-width spaces
+            .split(',')
+            .map(t => t.trim().toUpperCase())
+            .filter(t => t.length > 0 && t.length <= 5);
 
-
-        const tickerList = rawValue.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
+        if (tickerList.length === 0) return alert("No valid tickers found.");
 
         // 1. Enter Loading State
         mlBtn.innerHTML = `Running ML Model, Results will be displayed shortly... <span class="state-loading"></span>`;
         mlBtn.style.pointerEvents = "none";
-        console.log("Running ML")
-        const UN = sessionStorage.getItem("username")
+        console.log("Running ML Analysis...");
+
+        // 2. Fetch authenticated context safely from Firebase instance
+        // Change "username" string key name here if your python model expects "email"
+        const userEmail = auth.currentUser ? auth.currentUser.email : "HU-LO-RASHUM-KAREGA@GMAIL.COM";
 
         try {
             const response = await fetch(`${API_BASE}/run-ml-analysis`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tickers: tickerList, username: UN })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    tickers: tickerList,
+                    username: userEmail  // <-- Ensure this key matches your Python data model field exactly!
+                })
             });
 
+            // If it still gives a 422, let's read the precise field error message sent back from the server
+            if (response.status === 422) {
+                const errDetail = await response.json();
+                console.error("Validation breakdown mismatch:", errDetail);
+                alert(`Backend Validation Failed: ${JSON.stringify(errDetail.detail)}`);
+                return;
+            }
+
             const data = await response.json();
+            console.log("Full API Response from Python:", data); // <-- ADD THIS TEMP LOG
 
             if (data.success) {
-                // 2. Minimize the Input Area
+                // Minimize Input Elements
                 const inputGroup = document.querySelector('.ml-input-group');
                 const description = document.querySelector('.ml-description');
+                if (inputGroup) inputGroup.style.display = 'none';
+                if (description) description.style.display = 'none';
 
-                // Smoothly hide the elements
-                inputGroup.style.display = 'none';
-                description.style.display = 'none';
-
-                // 3. Render the Results
+                // Render Results
                 renderMLResults(data.results);
+            } else {
+                alert(data.message || "Model execution returned an unhandled state.");
             }
         } catch (err) {
             console.error(err);
@@ -396,29 +439,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function renderMLResults(results) {
     const footer = document.querySelector('.ml-footer');
-
-    // Create results container if it doesn't exist
     let resultsDiv = document.getElementById('ml-results-list');
+
     if (!resultsDiv) {
         resultsDiv = document.createElement('div');
         resultsDiv.id = 'ml-results-list';
         resultsDiv.className = 'ml-results-grid';
-        // Insert before the footer
         footer.parentNode.insertBefore(resultsDiv, footer);
     }
 
-    resultsDiv.innerHTML = results.map(res => {
+    resultsDiv.replaceChildren(); // Safely clear old results
+
+    results.forEach(res => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'ml-result-item';
+
         const color = res.probability > 70 ? 'var(--accent2)' : (res.probability > 40 ? 'var(--accent)' : 'var(--muted)');
-        return `
-            <div class="ml-result-item" style="border-left: 3px solid ${color}">
-                <span class="ml-ticker">${res.ticker}</span>
-                <div class="ml-prob-container">
-                    <span class="ml-prob-val">${res.probability}%</span>
-                    <div class="ml-prob-bar"><div class="ml-prob-fill" style="width: ${res.probability}%; background: ${color}"></div></div>
-                </div>
-            </div>
-        `;
-    }).join('');
+        itemDiv.style.borderLeft = `3px solid ${color}`;
+
+        // SECURE: Create the elements separately and append text
+        const tickerSpan = document.createElement('span');
+        tickerSpan.className = 'ml-ticker';
+        tickerSpan.textContent = res.ticker; // Safe from script injection
+
+        // Build out your probability progress bars
+        const probContainer = document.createElement('div');
+        probContainer.className = 'ml-prob-container';
+
+        const probVal = document.createElement('span');
+        probVal.className = 'ml-prob-val';
+        probVal.textContent = `${res.probability}%`;
+
+        const probBar = document.createElement('div');
+        probBar.className = 'ml-prob-bar';
+
+        const probFill = document.createElement('div');
+        probFill.className = 'ml-prob-fill';
+        probFill.style.width = `${res.probability}%`;
+        probFill.style.background = color;
+
+        probBar.appendChild(probFill);
+        probContainer.appendChild(probVal);
+        probContainer.appendChild(probBar);
+
+        itemDiv.appendChild(tickerSpan);
+        itemDiv.appendChild(probContainer);
+        resultsDiv.appendChild(itemDiv);
+    });
 }
 
 // Your 6 functions calling the helper
@@ -430,3 +497,15 @@ function copy20Below() { copyToClipboard(sma20Below); }
 function copy20Above() { copyToClipboard(sma20Above); }
 
 
+window.togglePivot = togglePivot;
+window.collapseAllPivots = collapseAllPivots;
+window.expandAllPivots = expandAllPivots;
+window.toggleCardBody = toggleCardBody;
+
+// Also expose your clipboard functions if they are called via HTML clicks:
+window.copy150Slow = copy150Slow;
+window.copy150Fast = copy150Fast;
+window.copy200Slow = copy200Slow;
+window.copy200Fast = copy200Fast;
+window.copy20Below = copy20Below;
+window.copy20Above = copy20Above;
