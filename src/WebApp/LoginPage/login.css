@@ -245,7 +245,7 @@ input:focus-visible {
    ============================================================ */
 
 .split-container::after {
-    content: "// MAR-STOCKS — LIVE METRICS TRACKER";
+    content: "// MAR-STOCKS — ML TERMINAL";
     flex: 1 1 50%;
     display: flex;
     align-items: flex-end;
@@ -254,15 +254,17 @@ input:focus-visible {
     font-size: 0.72rem;
     letter-spacing: 0.06em;
     color: rgba(251, 234, 235, 0.55);
-
-    /* Background maps the uniform SVG directly over the deep gradient */
-    background-image:
-        var(--tracker-svg),
+    background:
+        linear-gradient(115deg, transparent 40%, rgba(251, 234, 235, 0.07) 50%, transparent 60%),
+        repeating-linear-gradient(100deg,
+            rgba(251, 234, 235, 0.05) 0px,
+            rgba(251, 234, 235, 0.05) 2px,
+            transparent 2px,
+            transparent 46px),
         linear-gradient(200deg, var(--indigo) 0%, var(--indigo-deep) 55%, var(--deep) 100%);
-    background-repeat: no-repeat;
-    background-position: center 42%, center;
-    /* Using a fixed square proportion so the glowing dots don't stretch into ovals */
-    background-size: min(85%, 550px) min(85%, 550px), auto;
+    background-size: 220% 220%, auto, auto;
+    background-position: 0% 100%, 0 0, 0 0;
+    animation: rise-sweep 7s ease-in-out infinite;
     position: relative;
     overflow: hidden;
 }
@@ -270,20 +272,3 @@ input:focus-visible {
 /* ============================================================
    RESPONSIVE MODIFIERS
    ============================================================ */
-
-@media (max-width: 900px) {
-    .split-container::after {
-        display: none !important;
-    }
-
-    .form-panel {
-        max-width: 100%;
-        flex: 1 1 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .form-panel {
-        padding: 100px 24px 40px;
-    }
-}

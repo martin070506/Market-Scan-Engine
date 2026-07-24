@@ -3,13 +3,12 @@ from fastapi import FastAPI, UploadFile, File, HTTPException,Request
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address  
 from slowapi.errors import RateLimitExceeded
-from pydantic import BaseModel
-from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 from src.Python import scanner_service
 from src.Python import database
 from src.Python.models import MLRequest
-
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 RateLimiter=Limiter(key_func=get_remote_address)
 app = FastAPI()
@@ -24,7 +23,13 @@ app.add_middleware(
     allow_credentials=True,
 )
 
+
+
 # src/Python/main.py
+
+
+
+
 
 @app.post("/run-ml-analysis")
 @RateLimiter.limit("5/minute")  
