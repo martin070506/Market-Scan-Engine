@@ -10,7 +10,7 @@
 
 Market Scan Engine is a powerful web-based stock analysis platform that automatically scans your stock portfolio and identifies high-probability bullish chart patterns. Upload a CSV of ticker symbols and receive instant analysis across multiple technical indicators and patterns.
 
-**Live Demo:** [https://mar-stocks.netlify.app](https://mar-stocks.netlify.app)
+**Live Demo:** [https://mar-stocks.netlify.app](https://mar-stocks.netlify.app/LoginPage/login.html)
 
 ## ✨ Features
 
